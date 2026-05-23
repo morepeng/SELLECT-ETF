@@ -4,7 +4,535 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MJ Sniper v9.0 · ICT/SMC Elite Trading System</title>
-  <link rel="stylesheet" href="css/style.css" />
+<style>
+/* MJ Sniper v9.0 · style.css — Dark Military Terminal Aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+/* ── Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --bg-base:      #05070a;
+  --bg-panel:     #0b0f16;
+  --bg-card:      #0f1520;
+  --bg-table:     #0a0d13;
+  --bg-header:    #060c14;
+  --border:       #1a2535;
+  --border-glow:  #1e3a5f;
+
+  --green:        #00ff9d;
+  --green-dim:    #007a4d;
+  --amber:        #ffb300;
+  --amber-dim:    #7a5500;
+  --red:          #ff3b5c;
+  --red-dim:      #7a1c2d;
+  --cyan:         #00d4ff;
+  --cyan-dim:     #00607a;
+  --white:        #c8d8e8;
+  --dim:          #3a4a5a;
+  --muted:        #5a6a7a;
+
+  --score-high:   #00ff9d;
+  --score-mid:    #ffb300;
+  --score-low:    #4a5a6a;
+
+  --font-mono:    'Share Tech Mono', 'Courier New', monospace;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body:    'Exo 2', sans-serif;
+
+  --radius:       4px;
+  --glow-green:   0 0 8px rgba(0, 255, 157, 0.4);
+  --glow-amber:   0 0 8px rgba(255, 179, 0, 0.4);
+  --glow-red:     0 0 8px rgba(255, 59, 92, 0.4);
+  --glow-cyan:    0 0 6px rgba(0, 212, 255, 0.3);
+}
+
+/* ── Reset & Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 14px; }
+
+body {
+  background-color: var(--bg-base);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Subtle grid scanlines */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.012) 2px, rgba(0,212,255,0.012) 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+.header {
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.8);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--green-dim), var(--green));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  animation: pulse-icon 3s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,255,157,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(0,255,157,0.7); }
+}
+
+.logo-text h1 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: var(--green);
+  text-shadow: var(--glow-green);
+  line-height: 1.1;
+}
+
+.logo-text .subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ── Kill Zone Badge ─────────────────────────────────────────────────── */
+.kill-zone {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  border: 1px solid;
+  letter-spacing: 0.06em;
+  transition: all 0.3s;
+}
+.kill-zone.active   { color: var(--amber); border-color: var(--amber-dim); text-shadow: var(--glow-amber); animation: blink 1.5s step-end infinite; }
+.kill-zone.inactive { color: var(--dim); border-color: var(--border); }
+
+@keyframes blink { 50% { opacity: 0.5; } }
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 8px 20px;
+  border-radius: var(--radius);
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #003d20, #006633);
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #006633, #00ff9d22);
+  box-shadow: var(--glow-green), inset 0 0 20px rgba(0,255,157,0.05);
+}
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--cyan);
+  border-color: var(--cyan-dim);
+}
+.btn-secondary:hover { background: rgba(0,212,255,0.08); box-shadow: var(--glow-cyan); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--border);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+.btn-ghost:hover { color: var(--white); border-color: var(--border-glow); }
+
+/* ── Main Layout ─────────────────────────────────────────────────────── */
+.main-wrap {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Config Panel ─────────────────────────────────────────────────────── */
+.config-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s;
+}
+.config-panel.open { max-height: 500px; padding: 16px 20px; }
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.config-item label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.config-item input {
+  width: 100%;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 5px 8px;
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.config-item input:focus { border-color: var(--green-dim); box-shadow: var(--glow-green); }
+
+/* ── Control Bar ─────────────────────────────────────────────────────── */
+.control-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.stats-bar {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--amber);
+  margin-left: auto;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn:hover  { color: var(--white); }
+.tab-btn.active { color: var(--green); border-bottom-color: var(--green); text-shadow: var(--glow-green); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Log Window ──────────────────────────────────────────────────────── */
+.log-wrap {
+  background: var(--bg-table);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  height: 200px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  scroll-behavior: smooth;
+}
+
+.log-wrap::-webkit-scrollbar { width: 4px; }
+.log-wrap::-webkit-scrollbar-track { background: transparent; }
+.log-wrap::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+
+.log-line { padding: 1px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.log-header  { color: var(--cyan); font-weight: bold; }
+.log-section { color: var(--amber); letter-spacing: 0.06em; }
+.log-success { color: var(--green); }
+.log-buy     { color: var(--green); }
+.log-sell    { color: var(--red); }
+.log-warn    { color: var(--amber); }
+.log-info    { color: var(--muted); }
+
+/* ── Table Container ─────────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.table-header {
+  background: var(--bg-header);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.table-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(0,212,255,0.1);
+  color: var(--cyan-dim);
+  border: 1px solid var(--cyan-dim);
+}
+
+.table-scroll {
+  overflow-x: auto;
+  max-height: 520px;
+  overflow-y: auto;
+}
+.table-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--border-glow); }
+
+/* ── Tables ──────────────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-card);
+}
+
+th {
+  padding: 8px 12px;
+  text-align: left;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+th[data-sort]:hover { color: var(--cyan); cursor: pointer; }
+
+td {
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(26,37,53,0.6);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td      { background: rgba(0,212,255,0.03); }
+
+/* Row types */
+.row-pass td:first-child  { border-left: 2px solid var(--green-dim); }
+.row-fail td:first-child  { border-left: 2px solid var(--border); }
+.row-buy  td:first-child  { border-left: 2px solid var(--green); }
+.row-watch td:first-child { border-left: 2px solid var(--amber); }
+.row-sell td:first-child  { border-left: 2px solid var(--red); }
+.row-skip td:first-child  { border-left: 2px solid var(--dim); }
+
+/* ── Score cells ─────────────────────────────────────────────────────── */
+.score-cell {
+  font-weight: bold;
+  color: var(--muted);
+}
+.score-high {
+  color: var(--green) !important;
+  text-shadow: var(--glow-green);
+}
+.score-mid {
+  color: var(--amber) !important;
+}
+
+/* ── Zone cells ──────────────────────────────────────────────────────── */
+.zone-discount    { color: var(--green); }
+.zone-premium     { color: var(--red); }
+.zone-equilibrium { color: var(--amber); }
+.zone-unknown     { color: var(--dim); }
+
+/* ── Signals ─────────────────────────────────────────────────────────── */
+.signals-cell { display: flex; gap: 4px; align-items: center; }
+.signals-cell span {
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid currentColor;
+  opacity: 0.85;
+}
+
+/* ── Utility Classes ─────────────────────────────────────────────────── */
+.mono   { font-family: var(--font-mono); }
+.bold   { font-weight: 700; }
+.green  { color: var(--green); }
+.amber  { color: var(--amber); }
+.red    { color: var(--red); }
+.cyan   { color: var(--cyan); }
+.dim    { color: var(--dim); }
+.muted  { color: var(--muted); }
+
+/* ── Section Label ───────────────────────────────────────────────────── */
+.section-label {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+/* ── Summary Cards ───────────────────────────────────────────────────── */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.summary-card .card-val {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.summary-card .card-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.card-buy   .card-val { color: var(--green); text-shadow: var(--glow-green); }
+.card-watch .card-val { color: var(--amber); text-shadow: var(--glow-amber); }
+.card-sell  .card-val { color: var(--red);   text-shadow: var(--glow-red); }
+.card-skip  .card-val { color: var(--dim); }
+
+/* ── Pass Cell ───────────────────────────────────────────────────────── */
+.pass-cell span.green { font-size: 0.72rem; }
+
+/* ── Scrollbars ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .header { padding: 0 12px; }
+  .logo-text h1 { font-size: 0.72rem; }
+  .main-wrap { padding: 12px 10px 30px; }
+  .summary-row { grid-template-columns: repeat(2, 1fr); }
+  th, td { padding: 5px 8px; font-size: 0.7rem; }
+}
+
+/* ── Intro / empty state ─────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+
+/* ── Loading animation ────────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+</style>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
 </head>
 <body>
@@ -259,29 +787,1021 @@
 
 </div><!-- /main-wrap -->
 
-<!-- ── Scripts (順序重要) ─────────────────────────────────────────────── -->
-<script src="js/config.js"></script>
-<script src="js/data-service.js"></script>
-<script src="js/structure-engine.js"></script>
-<script src="js/etf-screener.js"></script>
-<script src="js/ict-smc-scorer.js"></script>
-<script src="js/app.js"></script>
 
-<!-- Patch: update summary cards after R2 renders -->
 <script>
-  const _origRender = window.renderR2Table;
-  // Hook after r2 table to update summary cards
-  document.addEventListener('r2-complete', (e) => {
-    const r2 = e.detail || [];
-    document.getElementById('sum-buy').textContent   = r2.filter(r=>r.action==='BUY').length;
-    document.getElementById('sum-watch').textContent = r2.filter(r=>r.action==='WATCH').length;
-    document.getElementById('sum-sell').textContent  = r2.filter(r=>r.action==='SELL').length;
-    document.getElementById('sum-skip').textContent  = r2.filter(r=>r.action==='SKIP').length;
-    document.getElementById('sum-etf').textContent   = State.topEtfs.length;
-    document.getElementById('sum-stocks').textContent = r2.filter(r=>r.success).length;
-    document.getElementById('r2-count').textContent   = r2.filter(r=>r.success).length + ' 檔';
-    document.getElementById('summary-row').style.display = 'grid';
+// ── config.js ──────────────────────────────────────────────────────────────
+// MJ Sniper v9.0 · ICT/SMC Elite Trading System
+// config.js — mirrors Python CONFIG, ETF_UNIVERSE, ETF_HOLDINGS_FALLBACK
+
+const CONFIG = {
+  R1_MIN_VOL_US:         500_000,
+  R1_MIN_TURNOVER_TW:    10_000_000,
+  R1_TREND_MA:           60,
+  R1_FLOW_SHORT:         5,
+  R1_FLOW_LONG:          20,
+  R1_ETF_SCORE_PASS:     50,
+  R1_TOP_N_ETF:          5,
+  R1_TOP_HOLDINGS:       15,
+  R1_MIN_KEEP_BY_MARKET: { US: 2, TW: 3, HK: 1, CN: 1 },
+
+  R2_STOP_HUNT_SCORE:    30,
+  R2_FVG_SCORE:          25,
+  R2_OB_SCORE:           25,
+  R2_OTE_SCORE:          20,
+  R2_BOS_BULL_SCORE:     20,
+  R2_MTF_BONUS:          15,
+  R2_DISCOUNT_BONUS:     10,
+  R2_MA20_PENALTY:       -20,
+  R2_PREMIUM_PENALTY:    -10,
+  R2_CHOCH_BEAR_PENALTY: -30,
+
+  BUY_SCORE:             80,
+  HOLD_SCORE:            60,
+
+  SWING_LOOKBACK:        5,
+  FVG_MIN_GAP_PCT:       0.002,
+  OB_MIN_IMPULSE_PCT:    0.005,
+  STOP_HUNT_WIG_PCT:     0.001,
+  OTE_LOW:               0.62,
+  OTE_HIGH:              0.79,
+
+  KILL_ZONES: {
+    Asia:    [9, 0, 11, 0],
+    London:  [15, 0, 17, 0],
+    NewYork: [21, 30, 23, 30],
+  },
+
+  MAX_WORKERS:   5,
+  REQUEST_DELAY: 250, // ms
+  CHANGE_LOOKBACK: 5,
+};
+
+const ETF_UNIVERSE = {
+  US: ['QQQ','XLK','SOXX','SMH','HACK','IGV','SKYY','ARKG','XLE','XOP','OIH','XLF','KRE','KBE','XLV','IBB','XBI','XLI','ITA','XAR','XLY','XLP','XLB','GDX','COPX','VNQ','IYR','SPY','IWM','DIA','BIL','TLT','HYG'],
+  TW: ['0050.TW','00981A.TW','00992A.TW','00987A.TW','00991A.TW','00995A.TW','00403A.TW'],
+  HK: ['2800.HK','2823.HK','3033.HK'],
+  CN: ['512480.SS','515050.SS','588000.SS','159949.SZ','512000.SS','159941.SZ'],
+};
+
+const TW_LEVERAGE_ETF = ['0050.TW','00981A.TW','00992A.TW','00987A.TW','00991A.TW','00995A.TW','00403A.TW'];
+
+const ETF_HOLDINGS = {
+  QQQ:  ['MSFT','NVDA','AAPL','AMZN','GOOGL','META','TSLA','AVGO','COST','NFLX','AMD','ADBE','QCOM','CSCO','INTU'],
+  XLK:  ['NVDA','AAPL','MSFT','AVGO','MU','AMD','ORCL','AMAT','QCOM','INTC','NOW','ANET','KLAC','LRCX','TXN'],
+  IGV:  ['MSFT','ORCL','PLTR','CRM','PANW','ADBE','CRWD','SNOW','NOW','TEAM','WDAY','ZS','DDOG','OKTA','HUBS'],
+  SOXX: ['NVDA','AVGO','AMD','QCOM','TXN','INTC','AMAT','LRCX','KLAC','MU','ON','MCHP','ADI','SWKS','MPWR'],
+  SMH:  ['NVDA','TSMC','ASML','AVGO','AMD','QCOM','TXN','AMAT','LRCX','KLAC','MU','INTC','ON','ADI','MCHP'],
+  HACK: ['CRWD','PANW','CSCO','FTNT','ZS','OKTA','VRNS','TENB','QLYS','SAIL','FFIV','S','CYBR','NTCT','FEYE'],
+  SKYY: ['MSFT','AMZN','GOOGL','ORCL','CRM','IBM','NOW','WDAY','DDOG','SNOW','ZS','OKTA','HUBS','BOX','TWLO'],
+  ARKG: ['RXRX','IRTC','PACB','TWST','VCYT','NVTA','FATE','CDNA','EXAS','TNDM','NTLA','BEAM','CRSP','EDIT','ARCT'],
+  XLE:  ['XOM','CVX','COP','SLB','WMB','KMI','PSX','VLO','MPC','OXY','EOG','FANG','DVN','PXD','HES'],
+  XOP:  ['MPC','OXY','FANG','VLO','PSX','DVN','EOG','PXD','COP','CXO','APA','MRO','CTRA','XEC','SM'],
+  OIH:  ['SLB','HAL','BKR','NOV','FTI','PTEN','WHD','RES','PUMP','NR','NINE','OIS','KOS','HP','NGL'],
+  XLF:  ['BRK-B','JPM','V','MA','BAC','WFC','GS','MS','BLK','SCHW','C','AXP','CB','MMC','AON'],
+  KRE:  ['ZION','HBAN','RF','CFG','KEY','MTB','FITB','COLB','WAL','BOKF','WTFC','IBOC','CVBF','CMA','PNFP'],
+  KBE:  ['JPM','BAC','WFC','C','USB','PNC','GS','MS','TFC','COF','FITB','KEY','RF','HBAN','ZION'],
+  XLV:  ['UNH','LLY','JNJ','ABBV','MRK','TMO','ABT','AMGN','DHR','VRTX','ISRG','REGN','ZTS','ELV','BSX'],
+  IBB:  ['AMGN','VRTX','REGN','GILD','BIIB','MRNA','ALNY','SGEN','ILMN','BMRN','EXEL','JAZZ','NBIX','SRPT','RARE'],
+  XBI:  ['RCUS','KRYS','DNLI','ARWR','KROS','PCVX','IMVT','CYTK','RVMD','PTGX','INVA','ACAD','EXAS','FOLD','NKTR'],
+  XLI:  ['GE','RTX','HON','UNP','CAT','DE','ETN','EMR','LMT','NOC','UPS','FDX','ITW','PH','CMI'],
+  ITA:  ['RTX','LMT','BA','NOC','GD','L3H','TDG','HEI','LDOS','SAIC','KTOS','DRS','CW','AXON','CACI'],
+  XLY:  ['AMZN','TSLA','HD','MCD','NKE','LOW','SBUX','BKNG','TJX','ROST','CMG','MAR','HLT','YUM','EBAY'],
+  XLP:  ['PG','COST','KO','PEP','WMT','PM','MO','MDLZ','CL','KMB','SYY','KR','HSY','CPB','K'],
+  XLB:  ['LIN','APD','ECL','SHW','FCX','NEM','NUE','DOW','DD','PPG','IFF','EMN','CF','MOS','ALB'],
+  GDX:  ['NEM','GOLD','AEM','WPM','KGC','PAAS','HL','SA','CDE','SBGL','AGI','OR','EDV','BTG','PVG'],
+  COPX: ['FCX','SCCO','HBM','TECK','FM','ANTO','CS','LUN','TRQ','SFR','CZICF','GLCNF','IVPAF','WRLG','ELBM'],
+  SPY:  ['MSFT','NVDA','AAPL','AMZN','META','GOOGL','TSLA','AVGO','BRK-B','LLY','UNH','JPM','V','XOM','MA'],
+  IWM:  ['SMCI','INSM','SAIA','MOD','CAVA','PLXS','PCVX','HIMS','STEP','SPSC','SHAK','TMDX','HRI','LNTH','SFM'],
+  DIA:  ['GS','UNH','MSFT','HON','CAT','SHW','MCD','V','AMGN','AXP','CRM','HD','IBM','JNJ','TRV'],
+  VNQ:  ['PLD','AMT','EQIX','WELL','SPG','PSA','O','CCI','DLR','AVB','EQR','MAA','ARE','BXP','IRM'],
+  IYR:  ['PLD','AMT','EQIX','SPG','PSA','WELL','O','CCI','DLR','AVB','WPC','NNN','VICI','FR','EXR'],
+  '0050.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','2303.TW','1301.TW','2412.TW'],
+  '00981A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
+  '00992A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00987A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00991A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00995A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00403A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '512480.SS': ['300750.SZ','002594.SZ','300014.SZ','002027.SZ','300274.SZ','300124.SZ','002049.SZ','300773.SZ','300316.SZ','002460.SZ'],
+  '515050.SS': ['600519.SS','000858.SZ','601318.SS','000568.SZ','002304.SZ','603288.SS','600887.SS','000799.SZ','002507.SZ','000596.SZ'],
+  '588000.SS': ['688981.SS','600845.SS','688041.SS','603501.SS','688036.SS','688012.SS','600703.SS','688008.SS','002607.SZ','688009.SS'],
+  '159949.SZ': ['300750.SZ','300014.SZ','002594.SZ','002049.SZ','300274.SZ','300124.SZ','300316.SZ','002142.SZ','002460.SZ','300773.SZ'],
+  '2800.HK': ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
+  '2823.HK': ['0700.HK','BABA','JD','BIDU','NTES','TME','BILI','VIPS','IQ','CTRP'],
+};
+
+
+// ── data-service.js ────────────────────────────────────────────────────────
+// data-service.js — Yahoo Finance OHLCV fetcher with local cache
+
+const DataService = (() => {
+  const _cache = {};
+  // Multiple CORS proxies; try in order
+  const PROXIES = [
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => url, // direct (works in some setups)
+  ];
+
+  const YF_CHART = (ticker, interval, range) =>
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${interval}&range=${range}&events=history&includePrePost=false`;
+
+  const PERIOD_MAP = {
+    '1y': '1y', '60d': '60d', '5d': '5d', '3mo': '3mo'
+  };
+
+  function parseChart(data) {
+    const result = data?.chart?.result?.[0];
+    if (!result || !result.timestamp) return null;
+    const ts   = result.timestamp;
+    const q    = result.indicators.quote[0];
+    const adj  = result.indicators.adjclose?.[0]?.adjclose || q.close;
+    const rows = [];
+    for (let i = 0; i < ts.length; i++) {
+      if (q.open[i] == null || q.close[i] == null) continue;
+      rows.push({
+        date:   new Date(ts[i] * 1000),
+        open:   q.open[i],
+        high:   q.high[i],
+        low:    q.low[i],
+        close:  q.close[i],
+        volume: q.volume[i] || 0,
+        adj:    adj[i] || q.close[i],
+      });
+    }
+    return rows.length >= 5 ? rows : null;
+  }
+
+  async function fetchWithProxy(url) {
+    for (const makeProxy of PROXIES) {
+      try {
+        const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(12000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        return data;
+      } catch { /* try next */ }
+    }
+    return null;
+  }
+
+  async function getOHLCV(ticker, period = '1y', interval = '1d') {
+    const key = `${ticker}|${period}|${interval}`;
+    if (_cache[key]) return _cache[key];
+
+    const url = YF_CHART(ticker, interval, PERIOD_MAP[period] || period);
+    const data = await fetchWithProxy(url);
+    if (!data) return null;
+
+    const rows = parseChart(data);
+    if (!rows) return null;
+
+    _cache[key] = rows;
+    return rows;
+  }
+
+  // Helper: field array from rows
+  function col(rows, field) { return rows.map(r => r[field]); }
+
+  // Rolling mean
+  function rollingMean(arr, n) {
+    return arr.map((_, i) => {
+      if (i < n - 1) return NaN;
+      const slice = arr.slice(i - n + 1, i + 1);
+      return slice.reduce((a, b) => a + b, 0) / n;
+    });
+  }
+
+  // EWM mean (com-style, pandas-like)
+  function ewmMean(arr, com) {
+    const alpha = 1 / (com + 1);
+    const out = new Array(arr.length).fill(NaN);
+    let prev = NaN;
+    for (let i = 0; i < arr.length; i++) {
+      if (isNaN(arr[i])) continue;
+      if (isNaN(prev)) { prev = arr[i]; out[i] = arr[i]; continue; }
+      prev = alpha * arr[i] + (1 - alpha) * prev;
+      out[i] = prev;
+    }
+    return out;
+  }
+
+  function clearCache() { Object.keys(_cache).forEach(k => delete _cache[k]); }
+
+  return { getOHLCV, col, rollingMean, ewmMean, clearCache };
+})();
+
+
+// ── structure-engine.js ────────────────────────────────────────────────────
+// structure-engine.js — JS port of Python StructureEngine & KillZoneFilter
+
+class KillZoneFilter {
+  constructor(zones) {
+    this.zones = zones || CONFIG.KILL_ZONES;
+  }
+  nowTW() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  }
+  currentZone() {
+    const now = this.nowTW();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    for (const [name, [sh, sm, eh, em]] of Object.entries(this.zones)) {
+      if (sh * 60 + sm <= cur && cur <= eh * 60 + em) return name;
+    }
+    return null;
+  }
+  isInKillZone() { return this.currentZone() !== null; }
+}
+
+class StructureEngine {
+  constructor(cfg) { this.cfg = cfg; }
+
+  // rows: [{open, high, low, close, volume, date}]
+  swingPoints(rows, lookback) {
+    const lb = lookback || this.cfg.SWING_LOOKBACK;
+    if (!rows || rows.length < lb * 2 + 1) return [[], []];
+    const h = rows.map(r => r.high);
+    const l = rows.map(r => r.low);
+    const sh = [], sl = [];
+    for (let i = lb; i < rows.length - lb; i++) {
+      const hSlice = h.slice(i - lb, i + lb + 1);
+      const lSlice = l.slice(i - lb, i + lb + 1);
+      if (h[i] === Math.max(...hSlice)) sh.push([i, h[i]]);
+      if (l[i] === Math.min(...lSlice)) sl.push([i, l[i]]);
+    }
+    return [sh, sl];
+  }
+
+  detectBosChoch(rows) {
+    const r = {
+      bos_bull: false, bos_bear: false, choch_bull: false, choch_bear: false,
+      structure: 'RANGING', last_sh: null, last_sl: null
+    };
+    const [sh_list, sl_list] = this.swingPoints(rows);
+    if (!sh_list.length || !sl_list.length) return r;
+
+    const latestClose = rows[rows.length - 1].close;
+    r.last_sh = sh_list[sh_list.length - 1][1];
+    r.last_sl = sl_list[sl_list.length - 1][1];
+    r.bos_bull = latestClose > r.last_sh;
+    r.bos_bear = latestClose < r.last_sl;
+
+    if (sh_list.length >= 2 && sl_list.length >= 2) {
+      const hh = sh_list.at(-1)[1] > sh_list.at(-2)[1];
+      const hl = sl_list.at(-1)[1] > sl_list.at(-2)[1];
+      const lh = sh_list.at(-1)[1] < sh_list.at(-2)[1];
+      const ll = sl_list.at(-1)[1] < sl_list.at(-2)[1];
+      if (hh && hl) r.structure = 'BULLISH';
+      else if (lh && ll) r.structure = 'BEARISH';
+      if (r.structure === 'BEARISH' && r.bos_bull) r.choch_bull = true;
+      if (r.structure === 'BULLISH' && r.bos_bear) r.choch_bear = true;
+    }
+    return r;
+  }
+
+  detectFvg(rows) {
+    const empty = {
+      has_bullish_fvg: false, in_bullish_fvg: false, bull_fvg_top: null, bull_fvg_bot: null,
+      has_bearish_fvg: false, in_bearish_fvg: false, bear_fvg_top: null, bear_fvg_bot: null,
+      fvg_count: 0
+    };
+    if (!rows || rows.length < 3) return empty;
+
+    const minGap = this.cfg.FVG_MIN_GAP_PCT;
+    const close = rows.at(-1).close;
+    const hi = rows.map(r => r.high);
+    const lo = rows.map(r => r.low);
+    const bull = [], bear = [];
+    const scanRange = Math.min(rows.length, 60);
+
+    for (let i = scanRange - 2; i > 0; i--) {
+      if (lo[i] > hi[i - 2]) {
+        const gapPct = (lo[i] - hi[i - 2]) / (hi[i - 2] + 1e-10);
+        if (gapPct >= minGap) bull.push({ top: lo[i], bot: hi[i - 2], in_fvg: hi[i - 2] <= close && close <= lo[i] });
+      } else if (hi[i] < lo[i - 2]) {
+        const gapPct = (lo[i - 2] - hi[i]) / (hi[i] + 1e-10);
+        if (gapPct >= minGap) bear.push({ top: lo[i - 2], bot: hi[i], in_fvg: hi[i] <= close && close <= lo[i - 2] });
+      }
+    }
+
+    const bb = bull[0] || null;
+    const br = bear[0] || null;
+    return {
+      has_bullish_fvg: !!bb, in_bullish_fvg: bb?.in_fvg || false, bull_fvg_top: bb?.top || null, bull_fvg_bot: bb?.bot || null,
+      has_bearish_fvg: !!br, in_bearish_fvg: br?.in_fvg || false, bear_fvg_top: br?.top || null, bear_fvg_bot: br?.bot || null,
+      fvg_count: bull.length + bear.length
+    };
+  }
+
+  detectOrderBlock(rows) {
+    const empty = {
+      in_bull_ob: false, in_bear_ob: false, bull_ob_top: null, bull_ob_bot: null,
+      bear_ob_top: null, bear_ob_bot: null, vol_contraction: false, bull_ob_count: 0, bear_ob_count: 0
+    };
+    if (!rows || rows.length < 3) return empty;
+
+    const minImpulse = this.cfg.OB_MIN_IMPULSE_PCT;
+    const n = rows.length;
+    const close   = rows.map(r => r.close);
+    const open_   = rows.map(r => r.open);
+    const high    = rows.map(r => r.high);
+    const low     = rows.map(r => r.low);
+    const vol     = rows.map(r => r.volume);
+    const latestClose = close[n - 1];
+
+    const avgVol5 = n > 6 ? vol.slice(-6, -1).reduce((a, b) => a + b, 0) / 5 : vol.reduce((a, b) => a + b, 0) / vol.length;
+    const volContraction = vol[n - 1] < avgVol5;
+
+    const bull_obs = [], bear_obs = [];
+    const scanN = Math.min(n - 2, 60);
+
+    for (let i = 1; i < scanN; i++) {
+      if (close[i] < open_[i] && i + 1 < n) {
+        const impulse = (high[i + 1] - close[i]) / (close[i] + 1e-10);
+        if (impulse >= minImpulse) bull_obs.push({ top: high[i], bot: low[i], impulse });
+      } else if (close[i] > open_[i] && i + 1 < n) {
+        const impulse = (close[i] - low[i + 1]) / (close[i] + 1e-10);
+        if (impulse >= minImpulse) bear_obs.push({ top: high[i], bot: low[i], impulse });
+      }
+    }
+
+    const hitOB = (list, price) => {
+      for (let j = list.length - 1; j >= 0; j--) {
+        if (list[j].bot <= price && price <= list[j].top) return list[j];
+      }
+      return null;
+    };
+    const bh = hitOB(bull_obs, latestClose);
+    const rh = hitOB(bear_obs, latestClose);
+
+    return {
+      in_bull_ob: !!bh, in_bear_ob: !!rh,
+      bull_ob_top: bh?.top || null, bull_ob_bot: bh?.bot || null,
+      bear_ob_top: rh?.top || null, bear_ob_bot: rh?.bot || null,
+      vol_contraction: volContraction, bull_ob_count: bull_obs.length, bear_ob_count: bear_obs.length
+    };
+  }
+
+  detectStopHunt(rows) {
+    const [sh_list, sl_list] = this.swingPoints(rows);
+    const r = { bull_stop_hunt: false, bear_stop_hunt: false, hunt_level: null, hunt_type: null, bull_engulf: false };
+    if (!sl_list.length || !sh_list.length) return r;
+
+    const latest = rows.at(-1);
+    const prev   = rows.at(-2);
+    const wigPct = this.cfg.STOP_HUNT_WIG_PCT;
+
+    for (const [, sl_price] of sl_list.slice(-3)) {
+      if (latest.low < sl_price * (1 - wigPct) && latest.close > sl_price) {
+        r.bull_stop_hunt = true; r.hunt_level = sl_price; r.hunt_type = 'Bullish Stop Hunt'; break;
+      }
+    }
+    if (!r.bull_stop_hunt) {
+      for (const [, sh_price] of sh_list.slice(-3)) {
+        if (latest.high > sh_price * (1 + wigPct) && latest.close < sh_price) {
+          r.bear_stop_hunt = true; r.hunt_level = sh_price; r.hunt_type = 'Bearish Stop Hunt'; break;
+        }
+      }
+    }
+    r.bull_engulf = latest.close > prev.high && latest.close > prev.close;
+    return r;
+  }
+
+  calcOte(rows) {
+    const [sh_list, sl_list] = this.swingPoints(rows);
+    const r = { in_ote: false, ote_low: null, ote_high: null, fib_pct: null, ote_direction: null };
+    if (!sh_list.length || !sl_list.length) return r;
+
+    const close = rows.at(-1).close;
+    const [last_sh_idx, last_sh] = sh_list.at(-1);
+    const [last_sl_idx, last_sl] = sl_list.at(-1);
+    const rng = last_sh - last_sl;
+    if (rng <= 0) return r;
+
+    let ote_lo, ote_hi, fib_pct, direction;
+    if (last_sh_idx > last_sl_idx) {
+      ote_lo = last_sh - this.cfg.OTE_HIGH * rng;
+      ote_hi = last_sh - this.cfg.OTE_LOW * rng;
+      fib_pct = (last_sh - close) / (rng + 1e-10);
+      direction = 'BULL';
+    } else {
+      ote_lo = last_sl + this.cfg.OTE_LOW * rng;
+      ote_hi = last_sl + this.cfg.OTE_HIGH * rng;
+      fib_pct = (close - last_sl) / (rng + 1e-10);
+      direction = 'BEAR';
+    }
+
+    r.in_ote = ote_lo <= close && close <= ote_hi;
+    r.ote_low = +ote_lo.toFixed(4);
+    r.ote_high = +ote_hi.toFixed(4);
+    r.fib_pct = +(fib_pct * 100).toFixed(1);
+    r.ote_direction = direction;
+    return r;
+  }
+
+  premiumDiscount(rows) {
+    const [sh_list, sl_list] = this.swingPoints(rows);
+    if (!sh_list.length || !sl_list.length) return { zone: 'UNKNOWN', eq_price: null, pct_from_eq: null };
+
+    const close = rows.at(-1).close;
+    const swing_hi = Math.max(...sh_list.slice(-3).map(x => x[1]));
+    const swing_lo = Math.min(...sl_list.slice(-3).map(x => x[1]));
+    if (swing_hi <= swing_lo) return { zone: 'UNKNOWN', eq_price: null, pct_from_eq: null };
+
+    const eq  = (swing_hi + swing_lo) / 2;
+    const pct = (close - eq) / (swing_hi - swing_lo + 1e-10) * 100;
+    const zone = close < eq * 0.995 ? 'DISCOUNT' : close > eq * 1.005 ? 'PREMIUM' : 'EQUILIBRIUM';
+    return {
+      zone,
+      eq_price:   +eq.toFixed(4),
+      swing_hi:   +swing_hi.toFixed(4),
+      swing_lo:   +swing_lo.toFixed(4),
+      pct_from_eq: +pct.toFixed(1),
+    };
+  }
+}
+
+
+// ── etf-screener.js ────────────────────────────────────────────────────────
+// etf-screener.js — Round 1 ETF Pre-Screener (JS port)
+
+class ETFPreScreener {
+  constructor(cfg) {
+    this.cfg    = cfg;
+    this.engine = new StructureEngine(cfg);
+  }
+
+  async screen(ticker, market = 'US') {
+    const r = {
+      ticker, market, pass: false, score: 0, price: null,
+      change_5d: 0, avg_vol_20d: 0, liquidity_ok: false,
+      trend_ok: false, flow_ok: false, ma60: null, vol_ratio: 0,
+      top_holdings: [], reasons: [], structure: 'RANGING', bos_bull: false,
+    };
+
+    const rows = await DataService.getOHLCV(ticker, '1y', '1d');
+    if (!rows || rows.length < 65) return r;
+
+    const close  = rows.map(r => r.close);
+    const vol    = rows.map(r => r.volume);
+    const latest = close.at(-1);
+
+    r.price       = +latest.toFixed(4);
+    r.change_5d   = close.length >= 6 ? +((latest - close.at(-6)) / close.at(-6) * 100).toFixed(2) : 0;
+
+    const vol20   = vol.slice(-20);
+    const avg20   = vol20.reduce((a, b) => a + b, 0) / vol20.length;
+    r.avg_vol_20d = Math.round(avg20);
+
+    // Liquidity check
+    let liq_ok;
+    if (market !== 'TW') {
+      liq_ok = avg20 >= this.cfg.R1_MIN_VOL_US;
+    } else {
+      const price20 = close.slice(-20);
+      const turnover20 = price20.map((p, i) => p * vol20[i]);
+      liq_ok = turnover20.reduce((a, b) => a + b, 0) / 20 >= this.cfg.R1_MIN_TURNOVER_TW;
+    }
+    r.liquidity_ok = liq_ok;
+
+    // Trend: MA60
+    const ma60arr = DataService.rollingMean(close, this.cfg.R1_TREND_MA);
+    const ma60    = ma60arr.at(-1);
+    r.trend_ok = latest > ma60;
+    r.ma60     = +ma60.toFixed(4);
+
+    // Flow: vol ratio short/long
+    const short_n = this.cfg.R1_FLOW_SHORT;
+    const long_n  = this.cfg.R1_FLOW_LONG;
+    const avgShort = vol.slice(-short_n).reduce((a, b) => a + b, 0) / short_n;
+    const avgLong  = vol.slice(-long_n).reduce((a, b) => a + b, 0) / long_n;
+    r.vol_ratio    = +(avgShort / (avgLong + 1e-10)).toFixed(2);
+    r.flow_ok      = r.vol_ratio > 1.0;
+
+    // Scoring
+    let score = 0, reasons = [];
+    if (liq_ok)      { score += 15; reasons.push('流動性✅'); }
+    if (r.trend_ok)  { score += 20; reasons.push('MA60趨勢✅'); }
+    if (r.flow_ok)   { score += 15; reasons.push('量增✅'); }
+
+    const chg = r.change_5d;
+    if (chg >= 5) score += 30;
+    else if (chg >= 2) score += 20;
+    else if (chg >= 0) score += 10;
+    else score -= 10;
+
+    const bos = this.engine.detectBosChoch(rows);
+    r.structure = bos.structure;
+    r.bos_bull  = bos.bos_bull;
+    if (bos.bos_bull)  { score += 10; reasons.push('BOS多頭'); }
+    else if (bos.bos_bear) { score -= 10; reasons.push('BOS空頭'); }
+
+    r.score   = score;
+    r.pass    = (liq_ok || ['CN', 'HK'].includes(market)) && score >= this.cfg.R1_ETF_SCORE_PASS;
+    r.reasons = reasons;
+    r.top_holdings = (ETF_HOLDINGS[ticker] || []).slice(0, this.cfg.R1_TOP_HOLDINGS);
+    return r;
+  }
+
+  async scanAll(universe, onProgress) {
+    const passed = [], failed = [];
+    const markets = Object.entries(universe);
+
+    for (const [market, tickers] of markets) {
+      onProgress?.(`📡 掃描 ${market} ETF (${tickers.length} 檔)...`);
+      for (const ticker of tickers) {
+        const res = await this.screen(ticker, market);
+        if (res.price !== null) {
+          (res.pass ? passed : failed).push(res);
+        }
+        onProgress?.(`  → ${ticker}: ${res.pass ? '✅' : '❌'} score=${res.score}`);
+        await sleep(this.cfg.REQUEST_DELAY);
+      }
+    }
+
+    // Also scan TW leverage ETFs
+    onProgress?.('📌 掃描台灣槓桿ETF...');
+    for (const t of TW_LEVERAGE_ETF) {
+      if (!alreadyScanned(passed, failed, t)) {
+        const res = await this.screen(t, 'TW');
+        if (res.price !== null) (res.pass ? passed : failed).push(res);
+        await sleep(this.cfg.REQUEST_DELAY);
+      }
+    }
+
+    passed.sort((a, b) => b.score - a.score);
+    failed.sort((a, b) => b.score - a.score);
+    return { passed, failed };
+  }
+}
+
+// Helpers
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function alreadyScanned(passed, failed, ticker) {
+  return [...passed, ...failed].some(r => r.ticker === ticker);
+}
+
+function selectTopEtfsByMarket(passed, keepMap, topN) {
+  const selected = [], seen = new Set();
+  for (const market of ['US', 'TW', 'HK', 'CN']) {
+    const n = keepMap[market] || 0;
+    const mkt = passed.filter(r => r.market === market);
+    for (const r of mkt.slice(0, n)) {
+      if (!seen.has(r.ticker)) { selected.push(r.ticker); seen.add(r.ticker); }
+    }
+  }
+  // Fill up to topN
+  for (const r of passed) {
+    if (selected.length >= topN) break;
+    if (!seen.has(r.ticker)) { selected.push(r.ticker); seen.add(r.ticker); }
+  }
+  return selected;
+}
+
+
+// ── ict-smc-scorer.js ──────────────────────────────────────────────────────
+// ict-smc-scorer.js — Round 2 ICT/SMC Elite Scorer (JS port)
+
+class ICTSMCScorer {
+  constructor(cfg) {
+    this.cfg    = cfg;
+    this.engine = new StructureEngine(cfg);
+  }
+
+  async analyze(ticker, sourceEtf = '') {
+    const r = {
+      ticker, source_etf: sourceEtf, success: false, price: null,
+      score: 0, action: 'SKIP', action_zh: '略過 ─', grade: '條件不足',
+      change_5d: 0, stop_hunt: {}, fvg: {}, ob: {}, ote: {}, bos: {}, pd_zone: {},
+      mtf_bull: false, kill_zone: null, kill_zone_ok: false,
+      stop_loss: null, kill_price_lo: null, kill_price_hi: null,
+      ma5: null, ma20: null, ma60: null, rsi: null, vol_ratio: null,
+      zone: null, structure: 'RANGING', reasons: [], error: '',
+    };
+
+    try {
+      const rows1d = await DataService.getOHLCV(ticker, '1y', '1d');
+      if (!rows1d || rows1d.length < 65) { r.error = '日線資料不足'; return r; }
+
+      const close = rows1d.map(x => x.close);
+      const vol   = rows1d.map(x => x.volume);
+      const price = close.at(-1);
+      r.price = +price.toFixed(4);
+
+      if (close.length >= 6) r.change_5d = +((price - close.at(-6)) / close.at(-6) * 100).toFixed(2);
+
+      // MAs
+      const ma5arr  = DataService.rollingMean(close, 5);
+      const ma20arr = DataService.rollingMean(close, 20);
+      const ma60arr = DataService.rollingMean(close, 60);
+      const ma5 = ma5arr.at(-1), ma20 = ma20arr.at(-1), ma60 = ma60arr.at(-1);
+      r.ma5 = +ma5.toFixed(4); r.ma20 = +ma20.toFixed(4); r.ma60 = +ma60.toFixed(4);
+
+      // ICT/SMC detections
+      const bos = this.engine.detectBosChoch(rows1d);
+      const fvg = this.engine.detectFvg(rows1d);
+      const ob  = this.engine.detectOrderBlock(rows1d);
+      const sh  = this.engine.detectStopHunt(rows1d);
+      const ote = this.engine.calcOte(rows1d);
+      const pdz = this.engine.premiumDiscount(rows1d);
+      Object.assign(r, { bos, fvg, ob, stop_hunt: sh, ote, pd_zone: pdz });
+
+      // MTF confluence (1h + 15m)
+      const rows1h  = await DataService.getOHLCV(ticker, '60d', '1h');
+      const rows15m = await DataService.getOHLCV(ticker, '5d', '15m');
+      r.mtf_bull = false;
+      if (rows1h?.length >= 25 && rows15m?.length >= 25) {
+        r.mtf_bull = this._checkMtfConfluence(rows1d, rows1h, rows15m);
+      }
+
+      // Kill zone
+      const kz = new KillZoneFilter();
+      r.kill_zone    = kz.currentZone();
+      r.kill_zone_ok = kz.isInKillZone();
+
+      // RSI (EWM, com=13)
+      const delta = close.map((v, i) => i === 0 ? 0 : v - close[i - 1]);
+      const gain  = delta.map(d => Math.max(d, 0));
+      const loss  = delta.map(d => Math.max(-d, 0));
+      const avgGain = DataService.ewmMean(gain, 13);
+      const avgLoss = DataService.ewmMean(loss, 13);
+      const rsiNow  = 100 - 100 / (1 + (avgGain.at(-1) / (avgLoss.at(-1) + 1e-10)));
+      r.rsi = +rsiNow.toFixed(1);
+
+      // Volume ratio
+      const vol5avg  = vol.slice(-5).reduce((a, b) => a + b, 0) / 5;
+      const vol20avg = vol.slice(-20).reduce((a, b) => a + b, 0) / 20;
+      r.vol_ratio = +(vol5avg / (vol20avg + 1e-10)).toFixed(2);
+
+      // ── SCORING ──────────────────────────────────────────────────
+      let score = 0, reasons = [];
+
+      // MA structure
+      if (price > ma60) { score += 10; reasons.push('MA60上方+10'); } else score -= 5;
+      if (price > ma20) { score += 8;  reasons.push('MA20上方+8'); }
+      if (ma5 > ma20)   { score += 7;  reasons.push('MA5強勢+7'); }
+
+      // RSI
+      if (rsiNow > 30 && rsiNow < 50)       { score += 8; reasons.push(`RSI低位回升+8(${rsiNow.toFixed(0)})`); }
+      else if (rsiNow >= 50 && rsiNow < 65)  { score += 5; reasons.push(`RSI中性+5(${rsiNow.toFixed(0)})`); }
+      else if (rsiNow >= 75)                 { score -= 5; reasons.push(`RSI超買-5(${rsiNow.toFixed(0)})`); }
+
+      // Volume
+      if (r.vol_ratio >= 1.5)      { score += 7; reasons.push(`量比${r.vol_ratio}x+7`); }
+      else if (r.vol_ratio >= 1.0) { score += 3; reasons.push(`量比${r.vol_ratio}x+3`); }
+
+      // 5-day change
+      const chg5 = r.change_5d;
+      if (chg5 >= 5)        { score += 5; reasons.push(`5日強勢+${chg5.toFixed(1)}%`); }
+      else if (chg5 >= 2)   { score += 3; reasons.push(`5日小漲+${chg5.toFixed(1)}%`); }
+      else if (chg5 < -3)   { score -= 5; reasons.push(`5日走弱${chg5.toFixed(1)}%`); }
+
+      // ICT signals
+      if (sh.bull_stop_hunt)     { score += this.cfg.R2_STOP_HUNT_SCORE; reasons.push('Stop Hunt多頭+30'); }
+      else if (sh.bear_stop_hunt){ score -= 15; reasons.push('Stop Hunt空頭-15'); }
+
+      if (fvg.in_bullish_fvg)    { score += this.cfg.R2_FVG_SCORE; reasons.push('Bullish FVG+25'); }
+
+      if (ob.in_bull_ob) {
+        score += this.cfg.R2_OB_SCORE; reasons.push('Bullish OB+25');
+        if (ob.vol_contraction) { score += 5; reasons.push('OB量縮+5'); }
+      }
+
+      if (ote.in_ote)            { score += this.cfg.R2_OTE_SCORE; reasons.push('OTE區+20'); }
+
+      if (bos.bos_bull)          { score += this.cfg.R2_BOS_BULL_SCORE; reasons.push('BOS多頭+20'); }
+      else if (bos.choch_bear || bos.bos_bear) { score += this.cfg.R2_CHOCH_BEAR_PENALTY; reasons.push('CHoCH/BOS空頭-30'); }
+
+      if (r.mtf_bull)            { score += this.cfg.R2_MTF_BONUS; reasons.push('MTF共振+15'); }
+
+      // Premium/Discount
+      const zone = pdz.zone || 'UNKNOWN';
+      if (zone === 'DISCOUNT')   { score += this.cfg.R2_DISCOUNT_BONUS; reasons.push('Discount+10'); }
+      else if (zone === 'PREMIUM'){ score += this.cfg.R2_PREMIUM_PENALTY; reasons.push('Premium-10'); }
+
+      if (price < ma20)          { score += this.cfg.R2_MA20_PENALTY; reasons.push('跌破MA20-20'); }
+
+      // Risk levels
+      r.stop_loss      = +(ma5 * 0.985).toFixed(4);
+      r.kill_price_lo  = +(price * 0.985).toFixed(4);
+      r.kill_price_hi  = +(price * 1.015).toFixed(4);
+      r.zone           = zone;
+      r.structure      = bos.structure || 'RANGING';
+
+      // Action
+      if (score >= this.cfg.BUY_SCORE)         { r.action = 'BUY';  r.action_zh = '買進 ▲'; r.grade = '強勢進場'; }
+      else if (score >= this.cfg.HOLD_SCORE)   { r.action = 'WATCH'; r.action_zh = '觀察 ◆'; r.grade = '等待進場點'; }
+      else if (bos.choch_bear || bos.bos_bear) { r.action = 'SELL'; r.action_zh = '賣出 ▼'; r.grade = '空頭結構'; }
+      else                                     { r.action = 'SKIP'; r.action_zh = '略過 ─'; r.grade = '條件不足'; }
+
+      r.score   = score;
+      r.reasons = reasons;
+      r.success = true;
+    } catch (e) {
+      r.error = String(e).slice(0, 120);
+    }
+    return r;
+  }
+
+  _checkMtfConfluence(rows1d, rows1h, rows15m) {
+    let bulls = 0;
+    for (const rows of [rows1d, rows1h, rows15m]) {
+      if (!rows || rows.length < 25) continue;
+      const close = rows.map(r => r.close);
+      const ma20arr = DataService.rollingMean(close, 20);
+      const ma20 = ma20arr.at(-1);
+      const latest = close.at(-1);
+      const bos = this.engine.detectBosChoch(rows);
+      if (latest > ma20 && (bos.bos_bull || bos.structure === 'BULLISH')) bulls++;
+    }
+    return bulls >= 2;
+  }
+}
+
+
+// ── app.js ─────────────────────────────────────────────────────────────────
+// app.js — MJ Sniper v9.0 Main Application Controller
+
+// ── State ───────────────────────────────────────────────────────────────────
+const State = {
+  running: false,
+  r1Results: { passed: [], failed: [] },
+  r2Results: [],
+  topEtfs: [],
+  log: [],
+};
+
+// ── DOM helpers ─────────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const el = (tag, cls, html) => {
+  const e = document.createElement(tag);
+  if (cls)  e.className = cls;
+  if (html) e.innerHTML = html;
+  return e;
+};
+
+// ── Logger ───────────────────────────────────────────────────────────────────
+function log(msg, type = 'info') {
+  State.log.push({ msg, type, ts: new Date().toLocaleTimeString() });
+  const div = $('log');
+  const line = el('div', `log-line log-${type}`);
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  div.appendChild(line);
+  div.scrollTop = div.scrollHeight;
+}
+
+// ── Kill Zone ticker ─────────────────────────────────────────────────────────
+function updateKillZone() {
+  const kz = new KillZoneFilter();
+  const zone = kz.currentZone();
+  const el$ = $('kill-zone');
+  if (zone) {
+    el$.textContent = `🎯 Kill Zone: ${zone}`;
+    el$.className = 'kill-zone active';
+  } else {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+    el$.textContent = `⏸ 非Kill Zone  台北 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    el$.className = 'kill-zone inactive';
+  }
+}
+setInterval(updateKillZone, 30000);
+
+// ── Run Button ───────────────────────────────────────────────────────────────
+$('btn-run').addEventListener('click', async () => {
+  if (State.running) return;
+  State.running = true;
+  $('btn-run').disabled = true;
+  $('btn-run').textContent = '⚡ 分析中...';
+  $('log').innerHTML = '';
+  $('r1-table-body').innerHTML = '';
+  $('r2-table-body').innerHTML = '';
+  $('stats-bar').textContent = '';
+
+  try {
+    await runAnalysis();
+  } finally {
+    State.running = false;
+    $('btn-run').disabled = false;
+    $('btn-run').textContent = '▶ 執行掃描';
+  }
+});
+
+async function runAnalysis() {
+  log('🚀 MJ Sniper v9.0 啟動 · ICT/SMC Elite System', 'header');
+  updateKillZone();
+
+  // ── Round 1: ETF Screener ────────────────────────────────────────────────
+  log('════ 第一輪: ETF賽道篩選 ════', 'section');
+  const screener = new ETFPreScreener(CONFIG);
+  const { passed, failed } = await screener.scanAll(ETF_UNIVERSE, msg => log(msg));
+  State.r1Results = { passed, failed };
+
+  log(`✅ 通過: ${passed.length} 檔  ❌ 淘汰: ${failed.length} 檔`, 'success');
+  renderR1Table(passed, failed);
+
+  // ── Select top ETFs by market ────────────────────────────────────────────
+  const topEtfs = selectTopEtfsByMarket(passed, CONFIG.R1_MIN_KEEP_BY_MARKET, CONFIG.R1_TOP_N_ETF);
+  State.topEtfs = topEtfs;
+  log(`📋 第二輪選用ETF: ${topEtfs.join(', ')}`, 'info');
+
+  // ── Round 2: ICT/SMC Scorer ─────────────────────────────────────────────
+  log('════ 第二輪: ICT/SMC 精密評分 ════', 'section');
+  const scorer  = new ICTSMCScorer(CONFIG);
+  const allStks = [];
+  const seen    = new Set();
+  for (const etf of topEtfs) {
+    for (const stk of (ETF_HOLDINGS[etf] || []).slice(0, CONFIG.R1_TOP_HOLDINGS)) {
+      if (!seen.has(stk)) { allStks.push({ stk, etf }); seen.add(stk); }
+    }
+  }
+
+  log(`📊 分析 ${allStks.length} 檔成分股...`, 'info');
+  const r2 = [];
+  let done = 0;
+  for (const { stk, etf } of allStks) {
+    const res = await scorer.analyze(stk, etf);
+    r2.push(res);
+    done++;
+    if (res.success) {
+      const icon = res.action === 'BUY' ? '🟢' : res.action === 'WATCH' ? '🟡' : res.action === 'SELL' ? '🔴' : '⚪';
+      log(`${icon} ${stk} (${etf}) score=${res.score} ${res.action_zh}`, res.action === 'BUY' ? 'buy' : res.action === 'SELL' ? 'sell' : 'info');
+    } else {
+      log(`⚠ ${stk}: ${res.error || '無資料'}`, 'warn');
+    }
+    $('stats-bar').textContent = `進度: ${done}/${allStks.length}`;
+    await sleep(CONFIG.REQUEST_DELAY);
+  }
+
+  r2.sort((a, b) => {
+    const order = { BUY: 0, WATCH: 1, SELL: 2, SKIP: 3 };
+    if (order[a.action] !== order[b.action]) return order[a.action] - order[b.action];
+    return b.score - a.score;
   });
+  State.r2Results = r2;
+  renderR2Table(r2);
+  document.dispatchEvent(new CustomEvent('r2-complete', { detail: r2 }));
+  document.getElementById('r1-count').textContent =
+    State.r1Results.passed.length + '/' +
+    (State.r1Results.passed.length + State.r1Results.failed.length) + ' 通過';
+
+  const buyCount = r2.filter(r => r.action === 'BUY').length;
+  log(`🎯 分析完成 · BUY: ${buyCount} · WATCH: ${r2.filter(r=>r.action==='WATCH').length}`, 'success');
+  $('stats-bar').textContent = `✅ 完成 | 買進訊號: ${buyCount} | WATCH: ${r2.filter(r=>r.action==='WATCH').length} | 略過: ${r2.filter(r=>r.action==='SKIP').length}`;
+  $('btn-export').disabled = false;
+}
+
+// ── Render R1 Table ──────────────────────────────────────────────────────────
+function renderR1Table(passed, failed) {
+  const tbody = $('r1-table-body');
+  tbody.innerHTML = '';
+  const all = [
+    ...passed.map(r => ({ ...r, _pass: true })),
+    ...failed.slice(0, 20).map(r => ({ ...r, _pass: false })),
+  ];
+  for (const r of all) {
+    const tr = document.createElement('tr');
+    tr.className = r._pass ? 'row-pass' : 'row-fail';
+    const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`;
+    const struct = r.structure === 'BULLISH' ? '<span class="green">BULL</span>' : r.structure === 'BEARISH' ? '<span class="red">BEAR</span>' : r.structure;
+    tr.innerHTML = `
+      <td class="mono bold">${r.ticker}</td>
+      <td>${r.market}</td>
+      <td class="mono">${r.price ?? '-'}</td>
+      <td class="mono">${change}</td>
+      <td class="score-cell">${r.score}</td>
+      <td>${r.liquidity_ok ? '✅' : '❌'}</td>
+      <td>${r.trend_ok ? '✅' : '❌'}</td>
+      <td>${r.flow_ok ? '✅' : '❌'}</td>
+      <td>${r.vol_ratio}</td>
+      <td>${struct}</td>
+      <td class="pass-cell">${r._pass ? '<span class="green">通過</span>' : '<span class="dim">淘汰</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// ── Render R2 Table ──────────────────────────────────────────────────────────
+function renderR2Table(results) {
+  const tbody = $('r2-table-body');
+  tbody.innerHTML = '';
+  const success = results.filter(r => r.success);
+  const top = success.slice(0, 60);
+  $('r2-count').textContent = success.length + ' 檔';
+
+  for (const r of top) {
+    const tr = document.createElement('tr');
+    tr.className = `row-${r.action.toLowerCase()}`;
+
+    const actionClass = r.action === 'BUY' ? 'green bold' : r.action === 'WATCH' ? 'amber' : r.action === 'SELL' ? 'red' : 'dim';
+    const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`;
+    const struct = r.structure === 'BULLISH' ? '<span class="green">●</span>' : r.structure === 'BEARISH' ? '<span class="red">●</span>' : '<span class="dim">●</span>';
+    const signals = [
+      r.stop_hunt?.bull_stop_hunt ? '<span class="green" title="Stop Hunt">SH</span>' : '',
+      r.fvg?.in_bullish_fvg ? '<span class="green" title="Fair Value Gap">FVG</span>' : '',
+      r.ob?.in_bull_ob ? '<span class="green" title="Order Block">OB</span>' : '',
+      r.ote?.in_ote ? '<span class="amber" title="Optimal Trade Entry">OTE</span>' : '',
+      r.mtf_bull ? '<span class="cyan" title="Multi-Timeframe Confluence">MTF</span>' : '',
+    ].filter(Boolean).join(' ');
+
+    tr.innerHTML = `
+      <td class="mono bold">${r.ticker}</td>
+      <td class="dim">${r.source_etf}</td>
+      <td class="mono">${r.price ?? '-'}</td>
+      <td>${change}</td>
+      <td class="score-cell ${r.score >= 80 ? 'score-high' : r.score >= 60 ? 'score-mid' : ''}">${r.score}</td>
+      <td class="${actionClass}">${r.action_zh}</td>
+      <td class="dim">${r.grade}</td>
+      <td>${struct} ${r.structure}</td>
+      <td class="mono dim">${r.rsi ?? '-'}</td>
+      <td class="mono dim">${r.vol_ratio ?? '-'}</td>
+      <td class="zone-${(r.zone||'').toLowerCase()}">${r.zone ?? '-'}</td>
+      <td class="signals-cell">${signals || '<span class="dim">─</span>'}</td>
+      <td class="mono dim">${r.stop_loss ?? '-'}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// ── Export CSV ───────────────────────────────────────────────────────────────
+$('btn-export').addEventListener('click', () => {
+  if (!State.r2Results.length) return;
+  exportCSV(State.r2Results.filter(r => r.success), 'MJ_Sniper_v9_R2');
+  exportCSV([...State.r1Results.passed, ...State.r1Results.failed], 'MJ_Sniper_v9_R1');
+});
+
+function exportCSV(rows, filename) {
+  if (!rows.length) return;
+  const keys = Object.keys(rows[0]).filter(k => typeof rows[0][k] !== 'object');
+  const header = keys.join(',');
+  const body = rows.map(r => keys.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + header + '\n' + body], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_${new Date().toISOString().slice(0,16).replace(/[T:]/g,'-')}.csv`;
+  a.click();
+}
+
+// ── Table sorting ─────────────────────────────────────────────────────────────
+function makeSortable(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  table.querySelectorAll('th[data-sort]').forEach(th => {
+    let asc = true;
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const col = parseInt(th.dataset.sort);
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const va = a.cells[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
+        const vb = b.cells[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
+        const na = parseFloat(va), nb = parseFloat(vb);
+        if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+        return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      asc = !asc;
+    });
+  });
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Config panel toggle ───────────────────────────────────────────────────────
+$('btn-config').addEventListener('click', () => {
+  const panel = $('config-panel');
+  panel.classList.toggle('open');
+  $('btn-config').textContent = panel.classList.contains('open') ? '⚙ 收合設定' : '⚙ 顯示設定';
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+updateKillZone();
+makeSortable('r1-table');
+makeSortable('r2-table');
+log('MJ Sniper v9.0 · ICT/SMC Elite Trading System 就緒', 'header');
+log('按下 ▶ 執行掃描 開始分析', 'info');
+
+
+// ── Summary cards patch ────────────────────────────────────────────────────
+document.addEventListener('r2-complete', (e) => {
+  const r2 = e.detail || [];
+  const $ = id => document.getElementById(id);
+  $('sum-buy').textContent   = r2.filter(r=>r.action==='BUY').length;
+  $('sum-watch').textContent = r2.filter(r=>r.action==='WATCH').length;
+  $('sum-sell').textContent  = r2.filter(r=>r.action==='SELL').length;
+  $('sum-skip').textContent  = r2.filter(r=>r.action==='SKIP').length;
+  $('sum-etf').textContent   = (window.State?.topEtfs||[]).length;
+  $('sum-stocks').textContent= r2.filter(r=>r.success).length;
+  $('r2-count').textContent  = r2.filter(r=>r.success).length + ' 檔';
+  $('summary-row').style.display = 'grid';
+});
 </script>
 
 </body>

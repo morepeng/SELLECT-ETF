@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MJ Sniper v9.0 · ICT/SMC Elite Trading System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🎯</div>
+    <div class="logo-text">
+      <h1>MJ SNIPER v9.0</h1>
+      <div class="subtitle">ICT / SMC ELITE TRADING SYSTEM · v9.2</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="kill-zone" class="kill-zone inactive">載入中...</div>
+    <button id="btn-config" class="btn btn-ghost">⚙ 顯示設定</button>
+  </div>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────────────────── -->
+<div class="main-wrap">
+
+  <!-- Config Panel -->
+  <div id="config-panel" class="config-panel">
+    <div class="section-label">系統設定 CONFIG</div>
+    <div class="config-grid">
+      <div class="config-item">
+        <label>R1_ETF_SCORE_PASS（ETF篩選門檻）</label>
+        <input id="cfg-r1-score" type="number" value="50" onchange="CONFIG.R1_ETF_SCORE_PASS=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>R1_TOP_N_ETF（第二輪最多ETF數）</label>
+        <input id="cfg-r1-topn" type="number" value="5" onchange="CONFIG.R1_TOP_N_ETF=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>R1_TOP_HOLDINGS（每ETF取成分股數）</label>
+        <input id="cfg-r1-holdings" type="number" value="15" onchange="CONFIG.R1_TOP_HOLDINGS=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>BUY_SCORE（買進門檻分數）</label>
+        <input id="cfg-buy" type="number" value="80" onchange="CONFIG.BUY_SCORE=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>HOLD_SCORE（觀察門檻分數）</label>
+        <input id="cfg-hold" type="number" value="60" onchange="CONFIG.HOLD_SCORE=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>R2_STOP_HUNT_SCORE（Stop Hunt加分）</label>
+        <input id="cfg-sh" type="number" value="30" onchange="CONFIG.R2_STOP_HUNT_SCORE=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>R2_FVG_SCORE（FVG加分）</label>
+        <input id="cfg-fvg" type="number" value="25" onchange="CONFIG.R2_FVG_SCORE=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>R2_OB_SCORE（Order Block加分）</label>
+        <input id="cfg-ob" type="number" value="25" onchange="CONFIG.R2_OB_SCORE=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>REQUEST_DELAY（請求間隔 ms）</label>
+        <input id="cfg-delay" type="number" value="250" onchange="CONFIG.REQUEST_DELAY=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>SWING_LOOKBACK（擺動點回看K棒數）</label>
+        <input id="cfg-swing" type="number" value="5" onchange="CONFIG.SWING_LOOKBACK=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>OTE_LOW（OTE下界 Fib）</label>
+        <input id="cfg-ote-lo" type="number" step="0.01" value="0.62" onchange="CONFIG.OTE_LOW=+this.value" />
+      </div>
+      <div class="config-item">
+        <label>OTE_HIGH（OTE上界 Fib）</label>
+        <input id="cfg-ote-hi" type="number" step="0.01" value="0.79" onchange="CONFIG.OTE_HIGH=+this.value" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Bar -->
+  <div class="control-bar">
+    <button id="btn-run" class="btn btn-primary">▶ 執行掃描</button>
+    <button id="btn-export" class="btn btn-secondary" disabled>⬇ 匯出 CSV</button>
+    <span id="stats-bar" class="stats-bar"></span>
+  </div>
+
+  <!-- Summary Cards (hidden until data loaded) -->
+  <div id="summary-row" class="summary-row" style="display:none">
+    <div class="summary-card card-buy">
+      <div class="card-val" id="sum-buy">0</div>
+      <div class="card-lbl">BUY 買進</div>
+    </div>
+    <div class="summary-card card-watch">
+      <div class="card-val" id="sum-watch">0</div>
+      <div class="card-lbl">WATCH 觀察</div>
+    </div>
+    <div class="summary-card card-sell">
+      <div class="card-val" id="sum-sell">0</div>
+      <div class="card-lbl">SELL 賣出</div>
+    </div>
+    <div class="summary-card card-skip">
+      <div class="card-val" id="sum-skip">0</div>
+      <div class="card-lbl">SKIP 略過</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-val" style="color:var(--cyan); font-size:1.2rem" id="sum-etf">─</div>
+      <div class="card-lbl">第二輪 ETF</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-val" style="color:var(--white); font-size:1.2rem" id="sum-stocks">─</div>
+      <div class="card-lbl">掃描成分股</div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-wrap" id="log">
+    <div class="log-line log-header">系統就緒 · MJ Sniper v9.0 ICT/SMC Elite Trading System</div>
+    <div class="log-line log-info">按下 ▶ 執行掃描 啟動第一輪ETF賽道篩選</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-r2">🎯 R2 · ICT/SMC 狙擊清單</button>
+    <button class="tab-btn" data-tab="tab-r1">📡 R1 · ETF 賽道篩選</button>
+    <button class="tab-btn" data-tab="tab-about">ℹ 說明</button>
+  </div>
+
+  <!-- Tab: R2 Results -->
+  <div id="tab-r2" class="tab-panel active">
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">第二輪 · ICT/SMC 精密評分</span>
+        <span class="table-badge" id="r2-count">0 檔</span>
+      </div>
+      <div class="table-scroll">
+        <table id="r2-table">
+          <thead>
+            <tr>
+              <th data-sort="0">代號</th>
+              <th>來源ETF</th>
+              <th data-sort="2">股價</th>
+              <th data-sort="3">5日%</th>
+              <th data-sort="4">得分</th>
+              <th>動作</th>
+              <th>評級</th>
+              <th>結構</th>
+              <th data-sort="8">RSI</th>
+              <th data-sort="9">量比</th>
+              <th>區間</th>
+              <th>ICT訊號</th>
+              <th>停損</th>
+            </tr>
+          </thead>
+          <tbody id="r2-table-body">
+            <tr>
+              <td colspan="13" class="empty-state">
+                <div class="icon">🎯</div>
+                點擊 ▶ 執行掃描 開始 ICT/SMC 分析
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: R1 Results -->
+  <div id="tab-r1" class="tab-panel">
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">第一輪 · ETF 賽道篩選</span>
+        <span class="table-badge" id="r1-count">0 檔</span>
+      </div>
+      <div class="table-scroll">
+        <table id="r1-table">
+          <thead>
+            <tr>
+              <th data-sort="0">ETF</th>
+              <th>市場</th>
+              <th data-sort="2">股價</th>
+              <th data-sort="3">5日%</th>
+              <th data-sort="4">得分</th>
+              <th>流動性</th>
+              <th>MA60趨勢</th>
+              <th>量增</th>
+              <th data-sort="8">量比</th>
+              <th>市場結構</th>
+              <th>結果</th>
+            </tr>
+          </thead>
+          <tbody id="r1-table-body">
+            <tr>
+              <td colspan="11" class="empty-state">
+                <div class="icon">📡</div>
+                等待掃描...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: About -->
+  <div id="tab-about" class="tab-panel">
+    <div class="table-wrap" style="padding: 24px 28px; line-height: 1.8; font-size: 0.85rem;">
+      <p class="section-label" style="margin-bottom:16px">MJ Sniper v9.0 · 系統說明</p>
+
+      <p style="color:var(--white); margin-bottom:12px">
+        本系統移植自 Python <code style="color:var(--green)">MJ_Sniper_v9.0</code>，採用兩輪篩選架構，結合 ICT（Inner Circle Trader）與 SMC（Smart Money Concepts）理論對全市場進行精密狙擊。
+      </p>
+
+      <p class="section-label" style="margin-top:20px">第一輪 · ETF賽道篩選（三道預篩）</p>
+      <ul style="color:var(--muted); padding-left:18px; margin-bottom:12px">
+        <li><span class="green">流動性</span>：美股日均量 &gt; 50萬；台股日均成交額 &gt; 1000萬</li>
+        <li><span class="green">MA60趨勢</span>：收盤價站上60日均線</li>
+        <li><span class="green">量能流向</span>：5日均量 / 20日均量 &gt; 1.0（量增）</li>
+        <li><span class="amber">BOS多頭</span>：突破最後擺動高點（加分）</li>
+        <li>各市場（US/TW/HK/CN）設置最低保留數量，防止台股被美股擠出</li>
+      </ul>
+
+      <p class="section-label" style="margin-top:20px">第二輪 · ICT/SMC 六維精密評分</p>
+      <ul style="color:var(--muted); padding-left:18px; margin-bottom:12px">
+        <li><span class="green">Stop Hunt +30</span>：掃低後回收（流動性獵殺）</li>
+        <li><span class="green">Bullish FVG +25</span>：多頭公平價值缺口</li>
+        <li><span class="green">Bullish OB +25</span>：多頭訂單塊（含量縮+5）</li>
+        <li><span class="green">OTE +20</span>：Fibonacci 0.62–0.79 最佳進場區</li>
+        <li><span class="green">BOS多頭 +20</span>：結構突破</li>
+        <li><span class="cyan">MTF共振 +15</span>：日線/1H/15M三框架共振</li>
+        <li><span class="green">Discount +10</span>：處於折價區間</li>
+        <li><span class="red">CHoCH/BOS空頭 -30</span>：結構反轉信號</li>
+      </ul>
+
+      <p class="section-label" style="margin-top:20px">行動訊號閾值</p>
+      <ul style="color:var(--muted); padding-left:18px; margin-bottom:12px">
+        <li><span class="green bold">BUY 買進</span>：得分 ≥ 80</li>
+        <li><span class="amber">WATCH 觀察</span>：得分 ≥ 60</li>
+        <li><span class="red">SELL 賣出</span>：出現 CHoCH/BOS空頭結構</li>
+        <li><span class="dim">SKIP 略過</span>：不符合條件</li>
+      </ul>
+
+      <p class="section-label" style="margin-top:20px">資料來源 & 注意事項</p>
+      <p style="color:var(--muted)">
+        資料來源：Yahoo Finance（透過 CORS Proxy 取得）。分析結果僅供參考，非投資建議。
+        市場資料可能有 15 分鐘延遲。第一次執行約需 3–8 分鐘（視網速及標的數量）。
+      </p>
+
+      <p class="section-label" style="margin-top:20px">支援市場</p>
+      <p style="color:var(--muted)">
+        🇺🇸 美國（US）· 🇹🇼 台灣（TW）· 🇭🇰 香港（HK）· 🇨🇳 A股（CN）
+      </p>
+    </div>
+  </div>
+
+</div><!-- /main-wrap -->
+
+<!-- ── Scripts (順序重要) ─────────────────────────────────────────────── -->
+<script src="js/config.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/structure-engine.js"></script>
+<script src="js/etf-screener.js"></script>
+<script src="js/ict-smc-scorer.js"></script>
+<script src="js/app.js"></script>
+
+<!-- Patch: update summary cards after R2 renders -->
+<script>
+  const _origRender = window.renderR2Table;
+  // Hook after r2 table to update summary cards
+  document.addEventListener('r2-complete', (e) => {
+    const r2 = e.detail || [];
+    document.getElementById('sum-buy').textContent   = r2.filter(r=>r.action==='BUY').length;
+    document.getElementById('sum-watch').textContent = r2.filter(r=>r.action==='WATCH').length;
+    document.getElementById('sum-sell').textContent  = r2.filter(r=>r.action==='SELL').length;
+    document.getElementById('sum-skip').textContent  = r2.filter(r=>r.action==='SKIP').length;
+    document.getElementById('sum-etf').textContent   = State.topEtfs.length;
+    document.getElementById('sum-stocks').textContent = r2.filter(r=>r.success).length;
+    document.getElementById('r2-count').textContent   = r2.filter(r=>r.success).length + ' 檔';
+    document.getElementById('summary-row').style.display = 'grid';
+  });
+</script>
+
+</body>
+</html>

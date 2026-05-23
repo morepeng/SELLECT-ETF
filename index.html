@@ -845,6 +845,7 @@ const ETF_UNIVERSE = {
 
 const TW_LEVERAGE_ETF = ['0050.TW','00981A.TW','00992A.TW','00987A.TW','00991A.TW','00995A.TW','00403A.TW'];
 
+// ⚠️ ETF_HOLDINGS 為備援靜態清單，真實執行時優先使用 DataService.getETFHoldings() 爬蟲
 const ETF_HOLDINGS = {
   QQQ:  ['MSFT','NVDA','AAPL','AMZN','GOOGL','META','TSLA','AVGO','COST','NFLX','AMD','ADBE','QCOM','CSCO','INTU'],
   XLK:  ['NVDA','AAPL','MSFT','AVGO','MU','AMD','ORCL','AMAT','QCOM','INTC','NOW','ANET','KLAC','LRCX','TXN'],
@@ -985,9 +986,46 @@ const DataService = (() => {
     return out;
   }
 
+  // ── getETFHoldings: 爬蟲取得ETF真實成分股 ─────────────────────────
+  // API: Yahoo Finance quoteSummary topHoldings module
+  // 備援: config.js 中的 ETF_HOLDINGS 靜態清單
+  async function getETFHoldings(ticker, maxN = 20) {
+    const cacheKey = `holdings:${ticker}`;
+    if (_cache[cacheKey]) return _cache[cacheKey];
+
+    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=topHoldings&corsDomain=finance.yahoo.com`;
+
+    let symbols = [];
+    for (const makeProxy of PROXIES) {
+      try {
+        const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(12000) });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const holdings = data?.quoteSummary?.result?.[0]?.topHoldings?.holdings || [];
+        symbols = holdings
+          .map(h => h.symbol)
+          .filter(s => s && s.length >= 1 && s.length <= 10)
+          .slice(0, maxN);
+        if (symbols.length >= 3) break; // 成功取得足夠資料
+      } catch { /* 嘗試下一個 proxy */ }
+    }
+
+    // 如果爬蟲失敗，使用備援靜態清單並記錄警告
+    if (symbols.length < 3) {
+      const fallback = (typeof ETF_HOLDINGS !== 'undefined' && ETF_HOLDINGS[ticker]) || [];
+      console.warn(`[DataService] getETFHoldings(${ticker}) 爬蟲失敗，使用備援清單 (${fallback.length}檔)`);
+      symbols = fallback.slice(0, maxN);
+    } else {
+      console.info(`[DataService] getETFHoldings(${ticker}) 爬蟲成功：${symbols.join(', ')}`);
+    }
+
+    if (symbols.length > 0) _cache[cacheKey] = symbols;
+    return symbols;
+  }
+
   function clearCache() { Object.keys(_cache).forEach(k => delete _cache[k]); }
 
-  return { getOHLCV, col, rollingMean, ewmMean, clearCache };
+  return { getOHLCV, getETFHoldings, col, rollingMean, ewmMean, clearCache };
 })();
 
 
@@ -1298,7 +1336,7 @@ class ETFPreScreener {
     r.score   = score;
     r.pass    = (liq_ok || ['CN', 'HK'].includes(market)) && score >= this.cfg.R1_ETF_SCORE_PASS;
     r.reasons = reasons;
-    r.top_holdings = (ETF_HOLDINGS[ticker] || []).slice(0, this.cfg.R1_TOP_HOLDINGS);
+    r.top_holdings = await DataService.getETFHoldings(ticker, this.cfg.R1_TOP_HOLDINGS);
     return r;
   }
 
@@ -1606,12 +1644,19 @@ async function runAnalysis() {
   // ── Round 2: ICT/SMC Scorer ─────────────────────────────────────────────
   log('════ 第二輪: ICT/SMC 精密評分 ════', 'section');
   const scorer  = new ICTSMCScorer(CONFIG);
+  // ── 爬蟲取得各ETF真實成分股清單 ────────────────────────────────────
+  log('📡 爬蟲取得成分股清單...', 'section');
   const allStks = [];
   const seen    = new Set();
   for (const etf of topEtfs) {
-    for (const stk of (ETF_HOLDINGS[etf] || []).slice(0, CONFIG.R1_TOP_HOLDINGS)) {
+    log(`  → 取得 ${etf} 成分股...`, 'info');
+    const holdings = await DataService.getETFHoldings(etf, CONFIG.R1_TOP_HOLDINGS);
+    const source   = holdings.length >= 3 ? '🌐爬蟲' : '📋備援';
+    log(`  → ${etf}: ${source} ${holdings.length} 檔 [${holdings.slice(0,5).join(',')}...]`, 'info');
+    for (const stk of holdings) {
       if (!seen.has(stk)) { allStks.push({ stk, etf }); seen.add(stk); }
     }
+    await sleep(CONFIG.REQUEST_DELAY);
   }
 
   log(`📊 分析 ${allStks.length} 檔成分股...`, 'info');

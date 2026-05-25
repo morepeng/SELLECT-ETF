@@ -681,7 +681,11 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
               <th data-sort="9">量比</th>
               <th>區間</th>
               <th>ICT訊號</th>
-              <th>停損</th>
+              <th>OFI</th>
+              <th>ML動量</th>
+              <th>波動政權</th>
+              <th>K線型態</th>
+              <th>ATR止損</th>
             </tr>
           </thead>
           <tbody id="r2-table-body">
@@ -1531,7 +1535,46 @@ class ICTSMCScorer {
       r.zone           = zone;
       r.structure      = bos.structure || 'RANGING';
 
-      // Action
+      // ── 2025新增模組：OFI + 微觀結構 + ML動量 + 波動率政權 + K線型態 ──
+      const ofi  = this.calcOFI(rows1d);
+      const ms   = this.calcMicrostructure(rows1d);
+      const mlm  = this.calcMLMomentum(rows1d);
+      const vr   = this.calcVolRegime(rows1d);
+      const cp   = this.calcCandlePatterns(rows1d);
+
+      // OFI 整合
+      score += ofi.score;
+      if (ofi.score > 0)  reasons.push(`OFI${ofi.signal}+${ofi.score}`);
+      else if (ofi.score < 0) reasons.push(`OFI${ofi.signal}${ofi.score}`);
+
+      // 微觀結構整合
+      score += ms.score;
+      if (ms.score !== 0) reasons.push(`微觀結構:${ms.advice.slice(0,8)}`);
+
+      // ML動量整合
+      score += mlm.score;
+      if (mlm.score !== 0) reasons.push(`ML動量:${mlm.signal}`);
+
+      // 波動率政權整合（乘數）
+      if (vr.regime === 'High Vol') {
+        score = Math.round(score * vr.buyMult);
+        reasons.push('高波動折扣×0.85');
+      }
+      if (vr.regime === 'Low Vol') reasons.push('低波動:等突破');
+
+      // K線型態整合
+      score += cp.score;
+      if (cp.patterns.length) reasons.push(`K線:${cp.patterns[0]}`);
+
+      // 存儲新模組結果
+      r.ofi  = ofi;
+      r.ms   = ms;
+      r.mlm  = mlm;
+      r.vr   = vr;
+      r.cp   = cp;
+      r.atr_stop = vr.atrStop;
+
+      // Action（更新後分數）
       if (score >= this.cfg.BUY_SCORE)         { r.action = 'BUY';  r.action_zh = '買進 ▲'; r.grade = '強勢進場'; }
       else if (score >= this.cfg.HOLD_SCORE)   { r.action = 'WATCH'; r.action_zh = '觀察 ◆'; r.grade = '等待進場點'; }
       else if (bos.choch_bear || bos.bos_bear) { r.action = 'SELL'; r.action_zh = '賣出 ▼'; r.grade = '空頭結構'; }
@@ -1558,6 +1601,174 @@ class ICTSMCScorer {
       if (latest > ma20 && (bos.bos_bull || bos.structure === 'BULLISH')) bulls++;
     }
     return bulls >= 2;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MODULE A: OFI 訂單流失衡 (Order Flow Imbalance · Z-Score版)
+  // ═══════════════════════════════════════════════════════════════════
+  calcOFI(rows) {
+    const n = rows.length;
+    const out = { signal: 'Neutral', zScore: 0, liquidityRisk: false, score: 0, advice: '' };
+    if (n < 25) return out;
+    const close = rows.map(r => r.close), vol = rows.map(r => r.volume);
+    const ofi = vol.map((v, i) => i===0 ? 0 : v * Math.sign(close[i] - close[i-1]));
+    const ofiCum = ofi.map((_, i) => i<19 ? NaN : ofi.slice(i-19,i+1).reduce((a,b)=>a+b,0));
+    const zArr = ofiCum.map((v, i) => {
+      if (i < 59 || isNaN(v)) return NaN;
+      const sl = ofiCum.slice(i-59,i+1).filter(x=>!isNaN(x));
+      if (sl.length < 10) return NaN;
+      const m = sl.reduce((a,b)=>a+b,0)/sl.length;
+      const s = Math.sqrt(sl.map(x=>(x-m)**2).reduce((a,b)=>a+b,0)/sl.length);
+      return s>0 ? (v-m)/s : 0;
+    });
+    const z = zArr.at(-1) || 0; out.zScore = isNaN(z) ? 0 : +z.toFixed(2);
+    if (z > 2)      { out.signal='Strong Buy';  out.score= 6; out.advice=`🐋機構大量吸籌(Z=${z.toFixed(1)})`; }
+    else if (z > 1) { out.signal='Buy';          out.score= 3; out.advice=`📈機構緩步建倉(Z=${z.toFixed(1)})`; }
+    else if (z<-2)  { out.signal='Strong Sell';  out.score=-6; out.advice=`⚠️機構大量出貨(Z=${z.toFixed(1)})`; }
+    else if (z<-1)  { out.signal='Sell';          out.score=-3; out.advice=`📉機構緩步減倉(Z=${z.toFixed(1)})`; }
+    else            { out.advice='⚖️訂單流平衡'; }
+    const vol20avg = vol.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const vol20std = Math.sqrt(vol.slice(-20).map(v=>(v-vol20avg)**2).reduce((a,b)=>a+b,0)/20);
+    out.liquidityRisk = (vol20std/(vol20avg+1e-9)) > 0.5;
+    if (out.liquidityRisk) { out.score -= 2; out.advice += ' 💧流動性偏低'; }
+    return out;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MODULE B: 市場微觀結構 (Market Microstructure)
+  // ═══════════════════════════════════════════════════════════════════
+  calcMicrostructure(rows) {
+    const n = rows.length;
+    const out = { liquidityScore: 0, depthQuality: 'Unknown', score: 0, advice: '' };
+    if (n < 25) return out;
+    const close = rows.map(r=>r.close), vol = rows.map(r=>r.volume);
+    const hlSpread = rows.map(r=>(r.high-r.low)/(r.close+1e-9));
+    const avgSpread20 = hlSpread.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const sorted = [...hlSpread].sort((a,b)=>a-b);
+    const medSpread = sorted[Math.floor(sorted.length/2)];
+    const pctChg = close.map((v,i)=>i===0?0:Math.abs((v-close[i-1])/(close[i-1]+1e-9)));
+    const volMA50 = vol.slice(-50).reduce((a,b)=>a+b,0)/Math.min(vol.length,50);
+    const pi = pctChg.map((p,i)=>p/((vol[i]/volMA50)+1e-9));
+    const pi20 = pi.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const piSorted = [...pi].sort((a,b)=>a-b); const medPI = piSorted[Math.floor(piSorted.length/2)];
+    const v20a = vol.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const v20s = Math.sqrt(vol.slice(-20).map(v=>(v-v20a)**2).reduce((a,b)=>a+b,0)/20);
+    const vv = v20s/(v20a+1e-9);
+    out.depthQuality = vv<0.3?'Deep':vv<0.6?'Moderate':'Shallow';
+    let liq=0;
+    if(avgSpread20<medSpread) liq+=2;
+    if(out.depthQuality==='Deep') liq+=3;
+    if(pi20<medPI) liq+=2;
+    out.liquidityScore=liq;
+    if(liq>=6)     { out.score= 2; out.advice='💎極佳流動性-適合大額交易'; }
+    else if(liq>=4){ out.score= 0; out.advice='✅良好流動性'; }
+    else if(liq<=2){ out.score=-2; out.advice='⚠️流動性不足-滑價風險高'; }
+    else           { out.advice='🔶流動性普通'; }
+    return out;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MODULE C: ML 增強型動量 (ML-Enhanced Momentum)
+  // ═══════════════════════════════════════════════════════════════════
+  calcMLMomentum(rows) {
+    const n = rows.length;
+    const out = { signal:'Neutral', percentile:50, reversalRisk:0, score:0, advice:'', momScore:0 };
+    if (n < 65) return out;
+    const close = rows.map(r=>r.close), vol = rows.map(r=>r.volume);
+    const pctChg = (period) => { const c=close.at(-1), p=close[n-1-period]; return p>0?(c-p)/p:0; };
+    const mom5=pctChg(5), mom10=pctChg(10), mom20=pctChg(20), mom60=n>=62?pctChg(60):pctChg(20);
+    const ms = mom5*0.4+mom10*0.3+mom20*0.2+mom60*0.1; out.momScore=+ms.toFixed(4);
+    if (n>=125) {
+      const hist=[];
+      for(let i=124;i<n;i++){
+        const c_=close[i],p5=close[i-5],p10=close[i-10],p20=close[i-20],p60=close[Math.max(i-60,0)];
+        hist.push((c_-p5)/(p5+1e-9)*0.4+(c_-p10)/(p10+1e-9)*0.3+(c_-p20)/(p20+1e-9)*0.2+(c_-p60)/(p60+1e-9)*0.1);
+      }
+      hist.sort((a,b)=>a-b);
+      out.percentile = +(hist.filter(x=>x<=ms).length/hist.length*100).toFixed(1);
+    }
+    const v5 = vol.slice(-5).reduce((a,b)=>a+b,0)/5, v20=vol.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const volOk = ms>0 && v5>v20;
+    const delta = close.map((v,i)=>i===0?0:v-close[i-1]);
+    const ag = DataService.ewmMean(delta.map(d=>Math.max(d,0)),13).at(-1);
+    const al = DataService.ewmMean(delta.map(d=>Math.max(-d,0)),13).at(-1);
+    const rsi = 100-100/(1+ag/(al+1e-9));
+    if (out.percentile>95&&rsi>70) out.reversalRisk= 1;
+    if (out.percentile< 5&&rsi<30) out.reversalRisk=-1;
+    if (out.percentile>75&&volOk&&out.reversalRisk===0)
+      { out.signal='Strong Uptrend'; out.score=5; out.advice=`🚀強勢上升(百分位:${out.percentile.toFixed(0)}%)`; }
+    else if (out.percentile>60&&volOk)
+      { out.signal='Uptrend'; out.score=2; out.advice=`📈上升趨勢(百分位:${out.percentile.toFixed(0)}%)`; }
+    else if (out.percentile<25&&out.reversalRisk===0)
+      { out.signal='Downtrend'; out.score=-4; out.advice=`📉下降趨勢(百分位:${out.percentile.toFixed(0)}%)`; }
+    else { out.advice=`➡️動量中性(百分位:${out.percentile.toFixed(0)}%)`; }
+    if (out.reversalRisk=== 1){ out.score-=4; out.advice+=' ⚠️超買反轉風險'; }
+    if (out.reversalRisk===-1){ out.score+=2; out.advice+=' 💎超賣反彈機會'; }
+    return out;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MODULE D: 波動率政權識別 (Volatility Regime)
+  // ═══════════════════════════════════════════════════════════════════
+  calcVolRegime(rows) {
+    const n = rows.length;
+    const out = { regime:'Normal', strategy:'Trend Following', buyMult:1.0, sellMult:1.0, advice:'', atrStop:0 };
+    if (n < 25) return out;
+    const close = rows.map(r=>r.close), high=rows.map(r=>r.high), low=rows.map(r=>r.low);
+    const ret = close.map((v,i)=>i===0?0:(v-close[i-1])/(close[i-1]+1e-9));
+    const rv20sl = ret.slice(-20); const m=rv20sl.reduce((a,b)=>a+b,0)/20;
+    const rv = Math.sqrt(rv20sl.map(r=>(r-m)**2).reduce((a,b)=>a+b,0)/20) * Math.sqrt(252);
+    const histRv=[]; const wn=20;
+    for(let i=wn;i<Math.min(n,272);i++){
+      const sl=ret.slice(i-wn,i); const mu=sl.reduce((a,b)=>a+b,0)/wn;
+      histRv.push(Math.sqrt(sl.map(r=>(r-mu)**2).reduce((a,b)=>a+b,0)/wn)*Math.sqrt(252));
+    }
+    histRv.sort((a,b)=>a-b);
+    const rv75=histRv[Math.floor(histRv.length*0.75)]||rv*1.2;
+    const rv25=histRv[Math.floor(histRv.length*0.25)]||rv*0.8;
+    if (rv>rv75)     { out.regime='High Vol'; out.strategy='Mean Reversion'; out.buyMult=0.85; out.sellMult=1.10; }
+    else if(rv<rv25) { out.regime='Low Vol';  out.strategy='Breakout'; }
+    const tr=rows.map((r,i)=>i===0?r.high-r.low:Math.max(r.high-r.low,Math.abs(r.high-rows[i-1].close),Math.abs(r.low-rows[i-1].close)));
+    out.atrStop = +(tr.slice(-14).reduce((a,b)=>a+b,0)/14*2).toFixed(4);
+    if(out.regime==='High Vol') out.advice=`⚡高波動(RV=${(rv*100).toFixed(1)}%) 降低部位 ATR止損=${out.atrStop}`;
+    else if(out.regime==='Low Vol') out.advice=`😴低波動(RV=${(rv*100).toFixed(1)}%) 等待突破 ATR止損=${out.atrStop}`;
+    else out.advice=`📊正常波動(RV=${(rv*100).toFixed(1)}%) ${out.strategy}`;
+    return out;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MODULE E: K線型態辨識 (Candlestick Patterns · 原生JS)
+  // ═══════════════════════════════════════════════════════════════════
+  calcCandlePatterns(rows) {
+    const out = { score:0, patterns:[], advice:'' };
+    if (rows.length < 3) return out;
+    const n=rows.length, r0=rows[n-1], r1=rows[n-2], r2=rows[n-3];
+    const body=r=>Math.abs(r.close-r.open), range=r=>r.high-r.low+1e-9;
+    const isBull=r=>r.close>r.open, isBear=r=>r.close<r.open;
+    const uw=r=>r.high-Math.max(r.open,r.close), lw=r=>Math.min(r.open,r.close)-r.low;
+    const isDoji=r=>body(r)/range(r)<0.1;
+    const P=out.patterns; let s=0;
+    // ─ 單根型態 ─
+    if(lw(r0)>2*body(r0)&&uw(r0)<body(r0)*0.5&&body(r0)/range(r0)>0.05){P.push('🔨錘頭線');s+=1.5;}
+    if(uw(r0)>2*body(r0)&&lw(r0)<body(r0)*0.5&&isBull(r0)&&body(r0)/range(r0)>0.05){P.push('🔃倒錘頭');s+=1;}
+    if(uw(r0)>2*body(r0)&&lw(r0)<body(r0)*0.5&&isBear(r0)){P.push('⭐流星線');s-=1.5;}
+    if(lw(r0)>2*body(r0)&&uw(r0)<body(r0)*0.5&&isBear(r0)){P.push('🪢上吊線');s-=1.5;}
+    if(isDoji(r0)&&lw(r0)>range(r0)*0.6){P.push('🐉蜻蜓十字');s+=1.5;}
+    if(isDoji(r0)&&uw(r0)>range(r0)*0.6){P.push('🪦墓碑十字');s-=1.5;}
+    // ─ 雙根型態 ─
+    if(isBear(r1)&&isBull(r0)&&r0.open<r1.close&&r0.close>r1.open){P.push('🟢多頭吞噬+2');s+=2;}
+    if(isBull(r1)&&isBear(r0)&&r0.open>r1.close&&r0.close<r1.open){P.push('🔴空頭吞噬-2');s-=2;}
+    if(isBear(r1)&&isBull(r0)&&r0.open<r1.close&&r0.close>(r1.open+r1.close)/2){P.push('⚡刺透型態');s+=2;}
+    if(isBull(r1)&&isBear(r0)&&r0.open>r1.close&&r0.close<(r1.open+r1.close)/2){P.push('☁️烏雲蓋頂');s-=2;}
+    // ─ 三根型態 ─
+    if(isBear(r2)&&body(r1)/range(r1)<0.3&&isBull(r0)&&r0.close>(r2.open+r2.close)/2&&body(r2)>body(r1)*2){P.push('🌅晨星+2');s+=2;}
+    if(isBull(r2)&&body(r1)/range(r1)<0.3&&isBear(r0)&&r0.close<(r2.open+r2.close)/2&&body(r2)>body(r1)*2){P.push('🌆黃昏星-2');s-=2;}
+    if(isBull(r2)&&isBull(r1)&&isBull(r0)&&r0.close>r1.close&&r1.close>r2.close){P.push('⚔️三白兵+2');s+=2;}
+    if(isBear(r2)&&isBear(r1)&&isBear(r0)&&r0.close<r1.close&&r1.close<r2.close){P.push('🦅三烏鴉-2');s-=2;}
+    if(isBear(r2)&&isDoji(r1)&&isBull(r0)&&r1.high<r2.low&&body(r0)>body(r2)*0.5){P.push('👶棄嬰多+2');s+=2;}
+    if(isBull(r2)&&isDoji(r1)&&isBear(r0)&&r1.low>r2.high&&body(r0)>body(r2)*0.5){P.push('👶棄嬰空-2');s-=2;}
+    out.score=s; out.advice=P.length?P.join(' · '):'無明顯K線型態';
+    return out;
   }
 }
 
@@ -1753,7 +1964,16 @@ function renderR2Table(results) {
       r.mtf_bull ? '<span class="cyan" title="Multi-Timeframe Confluence">MTF</span>' : '',
     ].filter(Boolean).join(' ');
 
-    tr.innerHTML = `
+    // 新模組欄位渲染
+      const oC = (r.ofi?.signal||'').includes('Buy')?'green':(r.ofi?.signal||'').includes('Sell')?'red':'dim';
+      const oT = r.ofi ? `<span class="${oC}" title="${(r.ofi.advice||'').replace(/"/g,"'")}">${r.ofi.signal||'─'} Z:${r.ofi.zScore??'-'}</span>` : '<span class="dim">─</span>';
+      const mC = r.mlm?.signal==='Strong Uptrend'||r.mlm?.signal==='Uptrend'?'green':r.mlm?.signal==='Downtrend'?'red':'dim';
+      const mT = r.mlm ? `<span class="${mC}" title="${(r.mlm.advice||'').replace(/"/g,"'")}">${(r.mlm.signal||'─').replace(' ','')}<small> ${r.mlm.percentile??'─'}%</small></span>` : '<span class="dim">─</span>';
+      const vC = r.vr?.regime==='High Vol'?'amber':r.vr?.regime==='Low Vol'?'cyan':'dim';
+      const vT = r.vr ? `<span class="${vC}" title="${(r.vr.advice||'').replace(/"/g,"'")}">${r.vr.regime||'─'}</span>` : '<span class="dim">─</span>';
+      const cC = (r.cp?.score||0)>0?'green':(r.cp?.score||0)<0?'red':'dim';
+      const cT = r.cp?.patterns?.length ? `<span class="${cC}" title="${(r.cp.advice||'').replace(/"/g,"'")}">${r.cp.patterns[0].slice(0,8)}</span>` : '<span class="dim">─</span>';
+      tr.innerHTML = `
       <td class="mono bold">${r.ticker}</td>
       <td class="dim">${r.source_etf}</td>
       <td class="mono">${r.price ?? '-'}</td>
@@ -1766,7 +1986,11 @@ function renderR2Table(results) {
       <td class="mono dim">${r.vol_ratio ?? '-'}</td>
       <td class="zone-${(r.zone||'').toLowerCase()}">${r.zone ?? '-'}</td>
       <td class="signals-cell">${signals || '<span class="dim">─</span>'}</td>
-      <td class="mono dim">${r.stop_loss ?? '-'}</td>
+      <td>${oT}</td>
+      <td>${mT}</td>
+      <td>${vT}</td>
+      <td>${cT}</td>
+      <td class="mono dim">${r.atr_stop ?? r.stop_loss ?? '-'}</td>
     `;
     tbody.appendChild(tr);
   }

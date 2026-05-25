@@ -880,16 +880,16 @@ const ETF_HOLDINGS = {
   DIA:  ['GS','UNH','MSFT','HON','CAT','SHW','MCD','V','AMGN','AXP','CRM','HD','IBM','JNJ','TRV'],
   VNQ:  ['PLD','AMT','EQIX','WELL','SPG','PSA','O','CCI','DLR','AVB','EQR','MAA','ARE','BXP','IRM'],
   IYR:  ['PLD','AMT','EQIX','SPG','PSA','WELL','O','CCI','DLR','AVB','WPC','NNN','VICI','FR','EXR'],
-  '0050.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','2303.TW','1301.TW','2412.TW'],
-  '00981A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
-  '00992A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
-  '00987A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
-  '00991A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
-  '00995A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
-  '00403A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '0050.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','3711.TWO','2303.TW','1301.TW','2412.TW','6669.TWO'],
+  '00981A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','3711.TWO','2395.TW','6505.TW','2891.TW','2886.TW','6669.TWO','2382.TW'],
+  '00992A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
+  '00987A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
+  '00991A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
+  '00995A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
+  '00403A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
   // ── 新增台股ETF備援成分（爬蟲優先，此為降級備援）──────────────────────
-  '00878.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','2882.TW','2881.TW','2412.TW','6505.TW','3008.TW','1301.TW'],
-  '00919.TW': ['2330.TW','2317.TW','2454.TW','2882.TW','2881.TW','2308.TW','1301.TW','2412.TW','2303.TW','6505.TW'],
+  '00878.TW': ['2330.TW','2454.TW','2317.TW','3711.TWO','2882.TW','2881.TW','6669.TWO','3034.TWO','2412.TW','5274.TWO','3443.TWO','3017.TWO','6505.TW','1301.TW','2308.TW'],
+  '00919.TW': ['2330.TW','2317.TW','2454.TW','3711.TWO','2882.TW','2881.TW','6488.TWO','6669.TWO','3034.TWO','2308.TW','1301.TW','2412.TW','2303.TW','6505.TW','3661.TWO'],
   '00980A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','1303.TW','2303.TW','2412.TW'],
   '00982A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','1303.TW','2303.TW','2412.TW'],
   '00985A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','1303.TW','2303.TW','2412.TW'],
@@ -959,15 +959,25 @@ const DataService = (() => {
     const key = `${ticker}|${period}|${interval}`;
     if (_cache[key]) return _cache[key];
 
-    const url = YF_CHART(ticker, interval, PERIOD_MAP[period] || period);
-    const data = await fetchWithProxy(url);
-    if (!data) return null;
+    // ── 台股：若爬蟲回傳純數字或不確定格式，自動嘗試 .TW 和 .TWO ──
+    const candidateTickers = [ticker];
+    if (/^\d{4}$/.test(ticker)) {
+      // 純4碼數字：同時嘗試 .TW 和 .TWO
+      candidateTickers.push(ticker + '.TW', ticker + '.TWO');
+    }
 
-    const rows = parseChart(data);
-    if (!rows) return null;
-
-    _cache[key] = rows;
-    return rows;
+    for (const t of candidateTickers) {
+      const url = YF_CHART(t, interval, PERIOD_MAP[period] || period);
+      const data = await fetchWithProxy(url);
+      if (!data) continue;
+      const rows = parseChart(data);
+      if (!rows) continue;
+      // 成功：同時快取原始 key 和實際 ticker key
+      _cache[key] = rows;
+      _cache[`${t}|${period}|${interval}`] = rows;
+      return rows;
+    }
+    return null;
   }
 
   // Helper: field array from rows
@@ -1014,7 +1024,13 @@ const DataService = (() => {
         const holdings = data?.quoteSummary?.result?.[0]?.topHoldings?.holdings || [];
         symbols = holdings
           .map(h => h.symbol)
-          .filter(s => s && s.length >= 1 && s.length <= 10)
+          .filter(s => s && s.length >= 1 && s.length <= 12)
+          .map(s => {
+            // Yahoo Finance 有時對上櫃股漏掉 .TWO，只回傳純數字或 .TW
+            // 如果是4位數字且無後綴，判斷是否為台股上櫃
+            if (/^\d{4}$/.test(s)) return s; // 保留，fallback 無法判斷
+            return s; // 其他保持原樣（含 .TW / .TWO / .HK 等）
+          })
           .slice(0, maxN);
         if (symbols.length >= 3) break; // 成功取得足夠資料
       } catch { /* 嘗試下一個 proxy */ }

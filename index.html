@@ -537,7 +537,6 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────────────────────── -->
 <header class="header">
   <div class="logo">
     <div class="logo-icon">🎯</div>
@@ -552,10 +551,8 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
   </div>
 </header>
 
-<!-- ── Main ───────────────────────────────────────────────────────────── -->
 <div class="main-wrap">
 
-  <!-- Config Panel -->
   <div id="config-panel" class="config-panel">
     <div class="section-label">系統設定 CONFIG</div>
     <div class="config-grid">
@@ -610,14 +607,12 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
     </div>
   </div>
 
-  <!-- Control Bar -->
   <div class="control-bar">
     <button id="btn-run" class="btn btn-primary">▶ 執行掃描</button>
     <button id="btn-export" class="btn btn-secondary" disabled>⬇ 匯出 CSV</button>
     <span id="stats-bar" class="stats-bar"></span>
   </div>
 
-  <!-- Summary Cards (hidden until data loaded) -->
   <div id="summary-row" class="summary-row" style="display:none">
     <div class="summary-card card-buy">
       <div class="card-val" id="sum-buy">0</div>
@@ -645,20 +640,17 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
     </div>
   </div>
 
-  <!-- Log -->
   <div class="log-wrap" id="log">
     <div class="log-line log-header">系統就緒 · MJ Sniper v9.0 ICT/SMC Elite Trading System</div>
     <div class="log-line log-info">按下 ▶ 執行掃描 啟動第一輪ETF賽道篩選</div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="tab-r2">🎯 R2 · ICT/SMC 狙擊清單</button>
     <button class="tab-btn" data-tab="tab-r1">📡 R1 · ETF 賽道篩選</button>
     <button class="tab-btn" data-tab="tab-about">ℹ 說明</button>
   </div>
 
-  <!-- Tab: R2 Results -->
   <div id="tab-r2" class="tab-panel active">
     <div class="table-wrap">
       <div class="table-header">
@@ -701,7 +693,6 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
     </div>
   </div>
 
-  <!-- Tab: R1 Results -->
   <div id="tab-r1" class="tab-panel">
     <div class="table-wrap">
       <div class="table-header">
@@ -738,7 +729,6 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
     </div>
   </div>
 
-  <!-- Tab: About -->
   <div id="tab-about" class="tab-panel">
     <div class="table-wrap" style="padding: 24px 28px; line-height: 1.8; font-size: 0.85rem;">
       <p class="section-label" style="margin-bottom:16px">MJ Sniper v9.0 · 系統說明</p>
@@ -789,12 +779,9 @@ tr:hover td      { background: rgba(0,212,255,0.03); }
     </div>
   </div>
 
-</div><!-- /main-wrap -->
-
-
-<script>
+</div><script>
 // ── config.js ──────────────────────────────────────────────────────────────
-// MJ Sniper v9.0 · ICT/SMC Elite Trading System
+// MJ Sniper v9.0 · ICT/SMC Elite Trading System v9.2
 // config.js — mirrors Python CONFIG, ETF_UNIVERSE, ETF_HOLDINGS_FALLBACK
 
 const CONFIG = {
@@ -806,7 +793,7 @@ const CONFIG = {
   R1_ETF_SCORE_PASS:     50,
   R1_TOP_N_ETF:          5,
   R1_TOP_HOLDINGS:       15,
-  R1_MIN_KEEP_BY_MARKET: { US: 2, TW: 4, HK: 1, CN: 1 },
+  R1_MIN_KEEP_BY_MARKET: { US: 2, TW: 3, HK: 1, CN: 1 },
 
   R2_STOP_HUNT_SCORE:    30,
   R2_FVG_SCORE:          25,
@@ -842,12 +829,12 @@ const CONFIG = {
 
 const ETF_UNIVERSE = {
   US: ['QQQ','XLK','SOXX','SMH','HACK','IGV','SKYY','ARKG','XLE','XOP','OIH','XLF','KRE','KBE','XLV','IBB','XBI','XLI','ITA','XAR','XLY','XLP','XLB','GDX','COPX','VNQ','IYR','SPY','IWM','DIA','BIL','TLT','HYG'],
-  TW: ['0050.TW','00878.TW','00919.TW','00980A.TW','00981A.TW','00982A.TW','00985A.TW','00987A.TW','00991A.TW','00992A.TW','00995A.TW','00403A.TW'],
+  TW: ['0050.TW', '00981A.TW', '00992A.TW', '00987A.TW','00991A.TW', '00995A.TW', '00403A.TW','00913.TW','00881.TW','00982A.TW','00922.TW'],
   HK: ['2800.HK','2823.HK','3033.HK'],
   CN: ['512480.SS','515050.SS','588000.SS','159949.SZ','512000.SS','159941.SZ'],
 };
 
-const TW_LEVERAGE_ETF = ['0050.TW','00878.TW','00919.TW','00980A.TW','00981A.TW','00982A.TW','00985A.TW','00987A.TW','00991A.TW','00992A.TW','00995A.TW','00403A.TW'];
+const TW_LEVERAGE_ETF = ['0050.TW', '00981A.TW', '00992A.TW', '00987A.TW','00991A.TW', '00995A.TW', '00403A.TW','00913.TW','00881.TW','00982A.TW','00922.TW'];
 
 // ⚠️ ETF_HOLDINGS 為備援靜態清單，真實執行時優先使用 DataService.getETFHoldings() 爬蟲
 const ETF_HOLDINGS = {
@@ -880,25 +867,24 @@ const ETF_HOLDINGS = {
   DIA:  ['GS','UNH','MSFT','HON','CAT','SHW','MCD','V','AMGN','AXP','CRM','HD','IBM','JNJ','TRV'],
   VNQ:  ['PLD','AMT','EQIX','WELL','SPG','PSA','O','CCI','DLR','AVB','EQR','MAA','ARE','BXP','IRM'],
   IYR:  ['PLD','AMT','EQIX','SPG','PSA','WELL','O','CCI','DLR','AVB','WPC','NNN','VICI','FR','EXR'],
-  '0050.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','3711.TWO','2303.TW','1301.TW','2412.TW','6669.TWO'],
-  '00981A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','3711.TWO','2395.TW','6505.TW','2891.TW','2886.TW','6669.TWO','2382.TW'],
-  '00992A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
-  '00987A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
-  '00991A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
-  '00995A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
-  '00403A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','3711.TWO','2303.TW','1301.TW','2882.TW','2412.TW','6669.TWO'],
-  // ── 新增台股ETF備援成分（爬蟲優先，此為降級備援）──────────────────────
-  '00878.TW': ['2330.TW','2454.TW','2317.TW','3711.TWO','2882.TW','2881.TW','6669.TWO','3034.TWO','2412.TW','5274.TWO','3443.TWO','3017.TWO','6505.TW','1301.TW','2308.TW'],
-  '00919.TW': ['2330.TW','2317.TW','2454.TW','3711.TWO','2882.TW','2881.TW','6488.TWO','6669.TWO','3034.TWO','2308.TW','1301.TW','2412.TW','2303.TW','6505.TW','3661.TWO'],
-  '00980A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','1303.TW','2303.TW','2412.TW'],
-  '00982A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','1303.TW','2303.TW','2412.TW'],
-  '00985A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','1303.TW','2303.TW','2412.TW'],
+  '0050.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2881.TW','2882.TW','2303.TW','1301.TW','2412.TW'],
+  '00981A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
+  '00992A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00987A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00991A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00995A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00403A.TW': ['2330.TW','2317.TW','2454.TW','2308.TW','3008.TW','2881.TW','2303.TW','1301.TW','2882.TW','2412.TW'],
+  '00913.TW':  ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
+  '00881.TW':  ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
+  '00982A.TW': ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
+  '00922.TW':  ['2330.TW','2454.TW','2317.TW','2308.TW','3008.TW','2395.TW','6505.TW','2891.TW','2886.TW','2382.TW'],
   '512480.SS': ['300750.SZ','002594.SZ','300014.SZ','002027.SZ','300274.SZ','300124.SZ','002049.SZ','300773.SZ','300316.SZ','002460.SZ'],
   '515050.SS': ['600519.SS','000858.SZ','601318.SS','000568.SZ','002304.SZ','603288.SS','600887.SS','000799.SZ','002507.SZ','000596.SZ'],
   '588000.SS': ['688981.SS','600845.SS','688041.SS','603501.SS','688036.SS','688012.SS','600703.SS','688008.SS','002607.SZ','688009.SS'],
   '159949.SZ': ['300750.SZ','300014.SZ','002594.SZ','002049.SZ','300274.SZ','300124.SZ','300316.SZ','002142.SZ','002460.SZ','300773.SZ'],
-  '2800.HK': ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
-  '2823.HK': ['0700.HK','BABA','JD','BIDU','NTES','TME','BILI','VIPS','IQ','CTRP'],
+  '2800.HK':   ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
+  '2823.HK':   ['0700.HK','BABA','JD','BIDU','NTES','TME','BILI','VIPS','IQ','CTRP'],
+  '3033.HK':   ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
 };
 
 
@@ -922,11 +908,11 @@ const DataService = (() => {
   };
 
   function parseChart(data) {
-    const result = data?.chart?.result?.[0];
+    const result = data && data.chart && data.chart.result ? data.chart.result[0] : null;
     if (!result || !result.timestamp) return null;
     const ts   = result.timestamp;
     const q    = result.indicators.quote[0];
-    const adj  = result.indicators.adjclose?.[0]?.adjclose || q.close;
+    const adj  = result.indicators.adjclose && result.indicators.adjclose[0] ? result.indicators.adjclose[0].adjclose : q.close;
     const rows = [];
     for (let i = 0; i < ts.length; i++) {
       if (q.open[i] == null || q.close[i] == null) continue;
@@ -944,13 +930,14 @@ const DataService = (() => {
   }
 
   async function fetchWithProxy(url) {
-    for (const makeProxy of PROXIES) {
+    for (let j = 0; j < PROXIES.length; j++) {
+      const makeProxy = PROXIES[j];
       try {
         const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(12000) });
         if (!res.ok) continue;
         const data = await res.json();
         return data;
-      } catch { /* try next */ }
+      } catch (err) { /* try next */ }
     }
     return null;
   }
@@ -962,17 +949,16 @@ const DataService = (() => {
     // ── 台股：若爬蟲回傳純數字或不確定格式，自動嘗試 .TW 和 .TWO ──
     const candidateTickers = [ticker];
     if (/^\d{4}$/.test(ticker)) {
-      // 純4碼數字：同時嘗試 .TW 和 .TWO
       candidateTickers.push(ticker + '.TW', ticker + '.TWO');
     }
 
-    for (const t of candidateTickers) {
+    for (let j = 0; j < candidateTickers.length; j++) {
+      const t = candidateTickers[j];
       const url = YF_CHART(t, interval, PERIOD_MAP[period] || period);
       const data = await fetchWithProxy(url);
       if (!data) continue;
       const rows = parseChart(data);
       if (!rows) continue;
-      // 成功：同時快取原始 key 和實際 ticker key
       _cache[key] = rows;
       _cache[`${t}|${period}|${interval}`] = rows;
       return rows;
@@ -980,10 +966,8 @@ const DataService = (() => {
     return null;
   }
 
-  // Helper: field array from rows
   function col(rows, field) { return rows.map(r => r[field]); }
 
-  // Rolling mean
   function rollingMean(arr, n) {
     return arr.map((_, i) => {
       if (i < n - 1) return NaN;
@@ -992,7 +976,6 @@ const DataService = (() => {
     });
   }
 
-  // EWM mean (com-style, pandas-like)
   function ewmMean(arr, com) {
     const alpha = 1 / (com + 1);
     const out = new Array(arr.length).fill(NaN);
@@ -1006,9 +989,6 @@ const DataService = (() => {
     return out;
   }
 
-  // ── getETFHoldings: 爬蟲取得ETF真實成分股 ─────────────────────────
-  // API: Yahoo Finance quoteSummary topHoldings module
-  // 備援: config.js 中的 ETF_HOLDINGS 靜態清單
   async function getETFHoldings(ticker, maxN = 20) {
     const cacheKey = `holdings:${ticker}`;
     if (_cache[cacheKey]) return _cache[cacheKey];
@@ -1016,27 +996,30 @@ const DataService = (() => {
     const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=topHoldings&corsDomain=finance.yahoo.com`;
 
     let symbols = [];
-    for (const makeProxy of PROXIES) {
+    for (let j = 0; j < PROXIES.length; j++) {
+      const makeProxy = PROXIES[j];
       try {
         const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(12000) });
         if (!res.ok) continue;
         const data = await res.json();
-        const holdings = data?.quoteSummary?.result?.[0]?.topHoldings?.holdings || [];
+        const holdings = (data && data.quoteSummary && data.quoteSummary.result && data.quoteSummary.result[0] && data.quoteSummary.result[0].topHoldings && data.quoteSummary.result[0].topHoldings.holdings) ? data.quoteSummary.result[0].topHoldings.holdings : [];
         symbols = holdings
           .map(h => h.symbol)
           .filter(s => s && s.length >= 1 && s.length <= 12)
           .map(s => {
-            // Yahoo Finance 有時對上櫃股漏掉 .TWO，只回傳純數字或 .TW
-            // 如果是4位數字且無後綴，判斷是否為台股上櫃
-            if (/^\d{4}$/.test(s)) return s; // 保留，fallback 無法判斷
-            return s; // 其他保持原樣（含 .TW / .TWO / .HK 等）
+            if (ticker.endsWith('.TW') || ticker.endsWith('.TWO')) {
+                if (!s.endsWith('.TW') && !s.endsWith('.TWO')) {
+                    return s + '.TW';
+                }
+            }
+            if (/^\d{4}$/.test(s)) return s; 
+            return s;
           })
           .slice(0, maxN);
-        if (symbols.length >= 3) break; // 成功取得足夠資料
-      } catch { /* 嘗試下一個 proxy */ }
+        if (symbols.length >= 3) break; 
+      } catch (err) { /* try next proxy */ }
     }
 
-    // 如果爬蟲失敗，使用備援靜態清單並記錄警告
     if (symbols.length < 3) {
       const fallback = (typeof ETF_HOLDINGS !== 'undefined' && ETF_HOLDINGS[ticker]) || [];
       console.warn(`[DataService] getETFHoldings(${ticker}) 爬蟲失敗，使用備援清單 (${fallback.length}檔)`);
@@ -1056,7 +1039,6 @@ const DataService = (() => {
 
 
 // ── structure-engine.js ────────────────────────────────────────────────────
-// structure-engine.js — JS port of Python StructureEngine & KillZoneFilter
 
 class KillZoneFilter {
   constructor(zones) {
@@ -1079,7 +1061,6 @@ class KillZoneFilter {
 class StructureEngine {
   constructor(cfg) { this.cfg = cfg; }
 
-  // rows: [{open, high, low, close, volume, date}]
   swingPoints(rows, lookback) {
     const lb = lookback || this.cfg.SWING_LOOKBACK;
     if (!rows || rows.length < lb * 2 + 1) return [[], []];
@@ -1104,16 +1085,21 @@ class StructureEngine {
     if (!sh_list.length || !sl_list.length) return r;
 
     const latestClose = rows[rows.length - 1].close;
-    r.last_sh = sh_list[sh_list.length - 1][1];
-    r.last_sl = sl_list[sl_list.length - 1][1];
+    const last_sh = sh_list[sh_list.length - 1];
+    const last_sl = sl_list[sl_list.length - 1];
+
+    r.last_sh = last_sh[1];
+    r.last_sl = last_sl[1];
     r.bos_bull = latestClose > r.last_sh;
     r.bos_bear = latestClose < r.last_sl;
 
     if (sh_list.length >= 2 && sl_list.length >= 2) {
-      const hh = sh_list.at(-1)[1] > sh_list.at(-2)[1];
-      const hl = sl_list.at(-1)[1] > sl_list.at(-2)[1];
-      const lh = sh_list.at(-1)[1] < sh_list.at(-2)[1];
-      const ll = sl_list.at(-1)[1] < sl_list.at(-2)[1];
+      const prev_sh = sh_list[sh_list.length - 2];
+      const prev_sl = sl_list[sl_list.length - 2];
+      const hh = last_sh[1] > prev_sh[1];
+      const hl = last_sl[1] > prev_sl[1];
+      const lh = last_sh[1] < prev_sh[1];
+      const ll = last_sl[1] < prev_sl[1];
       if (hh && hl) r.structure = 'BULLISH';
       else if (lh && ll) r.structure = 'BEARISH';
       if (r.structure === 'BEARISH' && r.bos_bull) r.choch_bull = true;
@@ -1131,7 +1117,7 @@ class StructureEngine {
     if (!rows || rows.length < 3) return empty;
 
     const minGap = this.cfg.FVG_MIN_GAP_PCT;
-    const close = rows.at(-1).close;
+    const close = rows[rows.length - 1].close;
     const hi = rows.map(r => r.high);
     const lo = rows.map(r => r.low);
     const bull = [], bear = [];
@@ -1150,8 +1136,14 @@ class StructureEngine {
     const bb = bull[0] || null;
     const br = bear[0] || null;
     return {
-      has_bullish_fvg: !!bb, in_bullish_fvg: bb?.in_fvg || false, bull_fvg_top: bb?.top || null, bull_fvg_bot: bb?.bot || null,
-      has_bearish_fvg: !!br, in_bearish_fvg: br?.in_fvg || false, bear_fvg_top: br?.top || null, bear_fvg_bot: br?.bot || null,
+      has_bullish_fvg: !!bb, 
+      in_bullish_fvg: (bb && bb.in_fvg) ? true : false, 
+      bull_fvg_top: (bb && bb.top) ? bb.top : null, 
+      bull_fvg_bot: (bb && bb.bot) ? bb.bot : null,
+      has_bearish_fvg: !!br, 
+      in_bearish_fvg: (br && br.in_fvg) ? true : false, 
+      bear_fvg_top: (br && br.top) ? br.top : null, 
+      bear_fvg_bot: (br && br.bot) ? br.bot : null,
       fvg_count: bull.length + bear.length
     };
   }
@@ -1172,7 +1164,7 @@ class StructureEngine {
     const vol     = rows.map(r => r.volume);
     const latestClose = close[n - 1];
 
-    const avgVol5 = n > 6 ? vol.slice(-6, -1).reduce((a, b) => a + b, 0) / 5 : vol.reduce((a, b) => a + b, 0) / vol.length;
+    const avgVol5 = n > 6 ? vol.slice(n - 6, n - 1).reduce((a, b) => a + b, 0) / 5 : vol.reduce((a, b) => a + b, 0) / vol.length;
     const volContraction = vol[n - 1] < avgVol5;
 
     const bull_obs = [], bear_obs = [];
@@ -1199,8 +1191,10 @@ class StructureEngine {
 
     return {
       in_bull_ob: !!bh, in_bear_ob: !!rh,
-      bull_ob_top: bh?.top || null, bull_ob_bot: bh?.bot || null,
-      bear_ob_top: rh?.top || null, bear_ob_bot: rh?.bot || null,
+      bull_ob_top: (bh && bh.top) ? bh.top : null, 
+      bull_ob_bot: (bh && bh.bot) ? bh.bot : null,
+      bear_ob_top: (rh && rh.top) ? rh.top : null, 
+      bear_ob_bot: (rh && rh.bot) ? rh.bot : null,
       vol_contraction: volContraction, bull_ob_count: bull_obs.length, bear_ob_count: bear_obs.length
     };
   }
@@ -1210,17 +1204,21 @@ class StructureEngine {
     const r = { bull_stop_hunt: false, bear_stop_hunt: false, hunt_level: null, hunt_type: null, bull_engulf: false };
     if (!sl_list.length || !sh_list.length) return r;
 
-    const latest = rows.at(-1);
-    const prev   = rows.at(-2);
+    const latest = rows[rows.length - 1];
+    const prev   = rows[rows.length - 2];
     const wigPct = this.cfg.STOP_HUNT_WIG_PCT;
 
-    for (const [, sl_price] of sl_list.slice(-3)) {
+    const sl_last_3 = sl_list.slice(Math.max(sl_list.length - 3, 0));
+    for (let i = 0; i < sl_last_3.length; i++) {
+      const sl_price = sl_last_3[i][1];
       if (latest.low < sl_price * (1 - wigPct) && latest.close > sl_price) {
         r.bull_stop_hunt = true; r.hunt_level = sl_price; r.hunt_type = 'Bullish Stop Hunt'; break;
       }
     }
     if (!r.bull_stop_hunt) {
-      for (const [, sh_price] of sh_list.slice(-3)) {
+      const sh_last_3 = sh_list.slice(Math.max(sh_list.length - 3, 0));
+      for (let i = 0; i < sh_last_3.length; i++) {
+        const sh_price = sh_last_3[i][1];
         if (latest.high > sh_price * (1 + wigPct) && latest.close < sh_price) {
           r.bear_stop_hunt = true; r.hunt_level = sh_price; r.hunt_type = 'Bearish Stop Hunt'; break;
         }
@@ -1235,9 +1233,11 @@ class StructureEngine {
     const r = { in_ote: false, ote_low: null, ote_high: null, fib_pct: null, ote_direction: null };
     if (!sh_list.length || !sl_list.length) return r;
 
-    const close = rows.at(-1).close;
-    const [last_sh_idx, last_sh] = sh_list.at(-1);
-    const [last_sl_idx, last_sl] = sl_list.at(-1);
+    const close = rows[rows.length - 1].close;
+    const last_sh_idx = sh_list[sh_list.length - 1][0];
+    const last_sh = sh_list[sh_list.length - 1][1];
+    const last_sl_idx = sl_list[sl_list.length - 1][0];
+    const last_sl = sl_list[sl_list.length - 1][1];
     const rng = last_sh - last_sl;
     if (rng <= 0) return r;
 
@@ -1266,16 +1266,18 @@ class StructureEngine {
     const [sh_list, sl_list] = this.swingPoints(rows);
     if (!sh_list.length || !sl_list.length) return { zone: 'UNKNOWN', eq_price: null, pct_from_eq: null };
 
-    const close = rows.at(-1).close;
-    const swing_hi = Math.max(...sh_list.slice(-3).map(x => x[1]));
-    const swing_lo = Math.min(...sl_list.slice(-3).map(x => x[1]));
+    const close = rows[rows.length - 1].close;
+    const sh_last_3 = sh_list.slice(Math.max(sh_list.length - 3, 0)).map(x => x[1]);
+    const sl_last_3 = sl_list.slice(Math.max(sl_list.length - 3, 0)).map(x => x[1]);
+    const swing_hi = Math.max.apply(null, sh_last_3);
+    const swing_lo = Math.min.apply(null, sl_last_3);
     if (swing_hi <= swing_lo) return { zone: 'UNKNOWN', eq_price: null, pct_from_eq: null };
 
     const eq  = (swing_hi + swing_lo) / 2;
     const pct = (close - eq) / (swing_hi - swing_lo + 1e-10) * 100;
     const zone = close < eq * 0.995 ? 'DISCOUNT' : close > eq * 1.005 ? 'PREMIUM' : 'EQUILIBRIUM';
     return {
-      zone,
+      zone: zone,
       eq_price:   +eq.toFixed(4),
       swing_hi:   +swing_hi.toFixed(4),
       swing_lo:   +swing_lo.toFixed(4),
@@ -1284,9 +1286,7 @@ class StructureEngine {
   }
 }
 
-
 // ── etf-screener.js ────────────────────────────────────────────────────────
-// etf-screener.js — Round 1 ETF Pre-Screener (JS port)
 
 class ETFPreScreener {
   constructor(cfg) {
@@ -1296,7 +1296,7 @@ class ETFPreScreener {
 
   async screen(ticker, market = 'US') {
     const r = {
-      ticker, market, pass: false, score: 0, price: null,
+      ticker: ticker, market: market, pass: false, score: 0, price: null,
       change_5d: 0, avg_vol_20d: 0, liquidity_ok: false,
       trend_ok: false, flow_ok: false, ma60: null, vol_ratio: 0,
       top_holdings: [], reasons: [], structure: 'RANGING', bos_bull: false,
@@ -1305,43 +1305,39 @@ class ETFPreScreener {
     const rows = await DataService.getOHLCV(ticker, '1y', '1d');
     if (!rows || rows.length < 65) return r;
 
-    const close  = rows.map(r => r.close);
-    const vol    = rows.map(r => r.volume);
-    const latest = close.at(-1);
+    const close  = rows.map(row => row.close);
+    const vol    = rows.map(row => row.volume);
+    const latest = close[close.length - 1];
 
-    r.price       = +latest.toFixed(4);
-    r.change_5d   = close.length >= 6 ? +((latest - close.at(-6)) / close.at(-6) * 100).toFixed(2) : 0;
+    r.price = +latest.toFixed(4);
+    r.change_5d = close.length >= 6 ? +((latest - close[close.length - 6]) / close[close.length - 6] * 100).toFixed(2) : 0;
 
-    const vol20   = vol.slice(-20);
-    const avg20   = vol20.reduce((a, b) => a + b, 0) / vol20.length;
+    const vol20 = vol.slice(vol.length - 20);
+    const avg20 = vol20.reduce((a, b) => a + b, 0) / vol20.length;
     r.avg_vol_20d = Math.round(avg20);
 
-    // Liquidity check
     let liq_ok;
     if (market !== 'TW') {
       liq_ok = avg20 >= this.cfg.R1_MIN_VOL_US;
     } else {
-      const price20 = close.slice(-20);
+      const price20 = close.slice(close.length - 20);
       const turnover20 = price20.map((p, i) => p * vol20[i]);
       liq_ok = turnover20.reduce((a, b) => a + b, 0) / 20 >= this.cfg.R1_MIN_TURNOVER_TW;
     }
     r.liquidity_ok = liq_ok;
 
-    // Trend: MA60
     const ma60arr = DataService.rollingMean(close, this.cfg.R1_TREND_MA);
-    const ma60    = ma60arr.at(-1);
+    const ma60    = ma60arr[ma60arr.length - 1];
     r.trend_ok = latest > ma60;
     r.ma60     = +ma60.toFixed(4);
 
-    // Flow: vol ratio short/long
     const short_n = this.cfg.R1_FLOW_SHORT;
     const long_n  = this.cfg.R1_FLOW_LONG;
-    const avgShort = vol.slice(-short_n).reduce((a, b) => a + b, 0) / short_n;
-    const avgLong  = vol.slice(-long_n).reduce((a, b) => a + b, 0) / long_n;
+    const avgShort = vol.slice(vol.length - short_n).reduce((a, b) => a + b, 0) / short_n;
+    const avgLong  = vol.slice(vol.length - long_n).reduce((a, b) => a + b, 0) / long_n;
     r.vol_ratio    = +(avgShort / (avgLong + 1e-10)).toFixed(2);
     r.flow_ok      = r.vol_ratio > 1.0;
 
-    // Scoring
     let score = 0, reasons = [];
     if (liq_ok)      { score += 15; reasons.push('流動性✅'); }
     if (r.trend_ok)  { score += 20; reasons.push('MA60趨勢✅'); }
@@ -1368,23 +1364,26 @@ class ETFPreScreener {
 
   async scanAll(universe, onProgress) {
     const passed = [], failed = [];
-    const markets = Object.entries(universe);
+    const markets = Object.keys(universe);
 
-    for (const [market, tickers] of markets) {
-      onProgress?.(`📡 掃描 ${market} ETF (${tickers.length} 檔)...`);
-      for (const ticker of tickers) {
+    for (let i = 0; i < markets.length; i++) {
+      const market = markets[i];
+      const tickers = universe[market];
+      if (onProgress) onProgress(`📡 掃描 ${market} ETF (${tickers.length} 檔)...`);
+      for (let j = 0; j < tickers.length; j++) {
+        const ticker = tickers[j];
         const res = await this.screen(ticker, market);
         if (res.price !== null) {
           (res.pass ? passed : failed).push(res);
         }
-        onProgress?.(`  → ${ticker}: ${res.pass ? '✅' : '❌'} score=${res.score}`);
+        if (onProgress) onProgress(`  → ${ticker}: ${res.pass ? '✅' : '❌'} score=${res.score}`);
         await sleep(this.cfg.REQUEST_DELAY);
       }
     }
 
-    // Also scan TW leverage ETFs
-    onProgress?.('📌 掃描台灣槓桿ETF...');
-    for (const t of TW_LEVERAGE_ETF) {
+    if (onProgress) onProgress('📌 掃描台灣槓桿ETF...');
+    for (let i = 0; i < TW_LEVERAGE_ETF.length; i++) {
+      const t = TW_LEVERAGE_ETF[i];
       if (!alreadyScanned(passed, failed, t)) {
         const res = await this.screen(t, 'TW');
         if (res.price !== null) (res.pass ? passed : failed).push(res);
@@ -1394,36 +1393,49 @@ class ETFPreScreener {
 
     passed.sort((a, b) => b.score - a.score);
     failed.sort((a, b) => b.score - a.score);
-    return { passed, failed };
+    return { passed: passed, failed: failed };
   }
 }
 
-// Helpers
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function alreadyScanned(passed, failed, ticker) {
-  return [...passed, ...failed].some(r => r.ticker === ticker);
+  const all = passed.concat(failed);
+  for(let i = 0; i < all.length; i++) {
+    if (all[i].ticker === ticker) return true;
+  }
+  return false;
 }
 
 function selectTopEtfsByMarket(passed, keepMap, topN) {
-  const selected = [], seen = new Set();
-  for (const market of ['US', 'TW', 'HK', 'CN']) {
+  const selected = [], seen = {};
+  const mkts = ['US', 'TW', 'HK', 'CN'];
+  for (let i = 0; i < mkts.length; i++) {
+    const market = mkts[i];
     const n = keepMap[market] || 0;
     const mkt = passed.filter(r => r.market === market);
-    for (const r of mkt.slice(0, n)) {
-      if (!seen.has(r.ticker)) { selected.push(r.ticker); seen.add(r.ticker); }
+    let count = 0;
+    for (let j = 0; j < mkt.length; j++) {
+      if (count >= n) break;
+      const r = mkt[j];
+      if (!seen[r.ticker]) {
+        selected.push(r.ticker);
+        seen[r.ticker] = true;
+        count++;
+      }
     }
   }
-  // Fill up to topN
-  for (const r of passed) {
+  for (let i = 0; i < passed.length; i++) {
     if (selected.length >= topN) break;
-    if (!seen.has(r.ticker)) { selected.push(r.ticker); seen.add(r.ticker); }
+    const r = passed[i];
+    if (!seen[r.ticker]) {
+      selected.push(r.ticker);
+      seen[r.ticker] = true;
+    }
   }
   return selected;
 }
 
-
 // ── ict-smc-scorer.js ──────────────────────────────────────────────────────
-// ict-smc-scorer.js — Round 2 ICT/SMC Elite Scorer (JS port)
 
 class ICTSMCScorer {
   constructor(cfg) {
@@ -1433,7 +1445,7 @@ class ICTSMCScorer {
 
   async analyze(ticker, sourceEtf = '') {
     const r = {
-      ticker, source_etf: sourceEtf, success: false, price: null,
+      ticker: ticker, source_etf: sourceEtf, success: false, price: null,
       score: 0, action: 'SKIP', action_zh: '略過 ─', grade: '條件不足',
       change_5d: 0, stop_hunt: {}, fvg: {}, ob: {}, ote: {}, bos: {}, pd_zone: {},
       mtf_bull: false, kill_zone: null, kill_zone_ok: false,
@@ -1448,78 +1460,104 @@ class ICTSMCScorer {
 
       const close = rows1d.map(x => x.close);
       const vol   = rows1d.map(x => x.volume);
-      const price = close.at(-1);
+      const price = close[close.length - 1];
       r.price = +price.toFixed(4);
 
-      if (close.length >= 6) r.change_5d = +((price - close.at(-6)) / close.at(-6) * 100).toFixed(2);
+      if (close.length >= 6) r.change_5d = +((price - close[close.length - 6]) / close[close.length - 6] * 100).toFixed(2);
 
-      // MAs
       const ma5arr  = DataService.rollingMean(close, 5);
       const ma20arr = DataService.rollingMean(close, 20);
       const ma60arr = DataService.rollingMean(close, 60);
-      const ma5 = ma5arr.at(-1), ma20 = ma20arr.at(-1), ma60 = ma60arr.at(-1);
+      const ma5 = ma5arr[ma5arr.length - 1];
+      const ma20 = ma20arr[ma20arr.length - 1];
+      const ma60 = ma60arr[ma60arr.length - 1];
       r.ma5 = +ma5.toFixed(4); r.ma20 = +ma20.toFixed(4); r.ma60 = +ma60.toFixed(4);
 
-      // ICT/SMC detections
       const bos = this.engine.detectBosChoch(rows1d);
       const fvg = this.engine.detectFvg(rows1d);
       const ob  = this.engine.detectOrderBlock(rows1d);
       const sh  = this.engine.detectStopHunt(rows1d);
       const ote = this.engine.calcOte(rows1d);
       const pdz = this.engine.premiumDiscount(rows1d);
-      Object.assign(r, { bos, fvg, ob, stop_hunt: sh, ote, pd_zone: pdz });
+      r.bos = bos; r.fvg = fvg; r.ob = ob; r.stop_hunt = sh; r.ote = ote; r.pd_zone = pdz;
 
-      // MTF confluence (1h + 15m)
       const rows1h  = await DataService.getOHLCV(ticker, '60d', '1h');
       const rows15m = await DataService.getOHLCV(ticker, '5d', '15m');
       r.mtf_bull = false;
-      if (rows1h?.length >= 25 && rows15m?.length >= 25) {
+      if (rows1h && rows1h.length >= 25 && rows15m && rows15m.length >= 25) {
         r.mtf_bull = this._checkMtfConfluence(rows1d, rows1h, rows15m);
       }
 
-      // Kill zone
       const kz = new KillZoneFilter();
       r.kill_zone    = kz.currentZone();
       r.kill_zone_ok = kz.isInKillZone();
 
-      // RSI (EWM, com=13)
       const delta = close.map((v, i) => i === 0 ? 0 : v - close[i - 1]);
       const gain  = delta.map(d => Math.max(d, 0));
       const loss  = delta.map(d => Math.max(-d, 0));
       const avgGain = DataService.ewmMean(gain, 13);
       const avgLoss = DataService.ewmMean(loss, 13);
-      const rsiNow  = 100 - 100 / (1 + (avgGain.at(-1) / (avgLoss.at(-1) + 1e-10)));
+      const rsiNow  = 100 - 100 / (1 + (avgGain[avgGain.length - 1] / (avgLoss[avgLoss.length - 1] + 1e-10)));
       r.rsi = +rsiNow.toFixed(1);
 
-      // Volume ratio
-      const vol5avg  = vol.slice(-5).reduce((a, b) => a + b, 0) / 5;
-      const vol20avg = vol.slice(-20).reduce((a, b) => a + b, 0) / 20;
+      const vol5avg  = vol.slice(vol.length - 5).reduce((a, b) => a + b, 0) / 5;
+      const vol20avg = vol.slice(vol.length - 20).reduce((a, b) => a + b, 0) / 20;
       r.vol_ratio = +(vol5avg / (vol20avg + 1e-10)).toFixed(2);
 
-      // ── SCORING ──────────────────────────────────────────────────
       let score = 0, reasons = [];
 
-      // MA structure
       if (price > ma60) { score += 10; reasons.push('MA60上方+10'); } else score -= 5;
       if (price > ma20) { score += 8;  reasons.push('MA20上方+8'); }
       if (ma5 > ma20)   { score += 7;  reasons.push('MA5強勢+7'); }
 
-      // RSI
       if (rsiNow > 30 && rsiNow < 50)       { score += 8; reasons.push(`RSI低位回升+8(${rsiNow.toFixed(0)})`); }
       else if (rsiNow >= 50 && rsiNow < 65)  { score += 5; reasons.push(`RSI中性+5(${rsiNow.toFixed(0)})`); }
       else if (rsiNow >= 75)                 { score -= 5; reasons.push(`RSI超買-5(${rsiNow.toFixed(0)})`); }
 
-      // Volume
       if (r.vol_ratio >= 1.5)      { score += 7; reasons.push(`量比${r.vol_ratio}x+7`); }
       else if (r.vol_ratio >= 1.0) { score += 3; reasons.push(`量比${r.vol_ratio}x+3`); }
 
-      // 5-day change
       const chg5 = r.change_5d;
       if (chg5 >= 5)        { score += 5; reasons.push(`5日強勢+${chg5.toFixed(1)}%`); }
       else if (chg5 >= 2)   { score += 3; reasons.push(`5日小漲+${chg5.toFixed(1)}%`); }
       else if (chg5 < -3)   { score -= 5; reasons.push(`5日走弱${chg5.toFixed(1)}%`); }
 
-      // ICT signals
+      const ofi  = this.calcOFI(rows1d);
+      const ms   = this.calcMicrostructure(rows1d);
+      const mlm  = this.calcMLMomentum(rows1d);
+      const vr   = this.calcVolRegime(rows1d);
+      const cp   = this.calcCandlePatterns(rows1d);
+
+      let cScoreInt = Math.round(cp.score * 5);
+      if (cScoreInt > 0) { score += cScoreInt; reasons.push(`K線偏多+${cScoreInt}`); }
+      else if (cScoreInt < 0) { score += cScoreInt; reasons.push(`K線偏空${cScoreInt}`); }
+
+      if (ofi.score !== 0) {
+          score += ofi.score;
+          let sign = ofi.score > 0 ? '+' : '';
+          let short_advice = ofi.advice ? ofi.advice.split('(')[0].trim() : '';
+          reasons.push(`OFI訊號${sign}${ofi.score} (${short_advice})`);
+      }
+
+      score += ms.score;
+      if (ms.score !== 0) reasons.push(`微觀結構:${ms.advice.slice(0, 8)}`);
+
+      score += mlm.score;
+      if (mlm.score !== 0) reasons.push(`ML動量:${mlm.signal}`);
+
+      if (vr.regime === 'High Vol') {
+        score = Math.round(score * vr.buyMult);
+        reasons.push('高波動折扣x0.85');
+      }
+      if (vr.regime === 'Low Vol') reasons.push('低波動:等突破');
+
+      r.ofi  = ofi;
+      r.ms   = ms;
+      r.mlm  = mlm;
+      r.vr   = vr;
+      r.cp   = cp;
+      r.atr_stop = vr.atrStop;
+
       if (sh.bull_stop_hunt)     { score += this.cfg.R2_STOP_HUNT_SCORE; reasons.push('Stop Hunt多頭+30'); }
       else if (sh.bear_stop_hunt){ score -= 15; reasons.push('Stop Hunt空頭-15'); }
 
@@ -1537,60 +1575,18 @@ class ICTSMCScorer {
 
       if (r.mtf_bull)            { score += this.cfg.R2_MTF_BONUS; reasons.push('MTF共振+15'); }
 
-      // Premium/Discount
       const zone = pdz.zone || 'UNKNOWN';
       if (zone === 'DISCOUNT')   { score += this.cfg.R2_DISCOUNT_BONUS; reasons.push('Discount+10'); }
       else if (zone === 'PREMIUM'){ score += this.cfg.R2_PREMIUM_PENALTY; reasons.push('Premium-10'); }
 
       if (price < ma20)          { score += this.cfg.R2_MA20_PENALTY; reasons.push('跌破MA20-20'); }
 
-      // Risk levels
       r.stop_loss      = +(ma5 * 0.985).toFixed(4);
       r.kill_price_lo  = +(price * 0.985).toFixed(4);
       r.kill_price_hi  = +(price * 1.015).toFixed(4);
       r.zone           = zone;
       r.structure      = bos.structure || 'RANGING';
 
-      // ── 2025新增模組：OFI + 微觀結構 + ML動量 + 波動率政權 + K線型態 ──
-      const ofi  = this.calcOFI(rows1d);
-      const ms   = this.calcMicrostructure(rows1d);
-      const mlm  = this.calcMLMomentum(rows1d);
-      const vr   = this.calcVolRegime(rows1d);
-      const cp   = this.calcCandlePatterns(rows1d);
-
-      // OFI 整合
-      score += ofi.score;
-      if (ofi.score > 0)  reasons.push(`OFI${ofi.signal}+${ofi.score}`);
-      else if (ofi.score < 0) reasons.push(`OFI${ofi.signal}${ofi.score}`);
-
-      // 微觀結構整合
-      score += ms.score;
-      if (ms.score !== 0) reasons.push(`微觀結構:${ms.advice.slice(0,8)}`);
-
-      // ML動量整合
-      score += mlm.score;
-      if (mlm.score !== 0) reasons.push(`ML動量:${mlm.signal}`);
-
-      // 波動率政權整合（乘數）
-      if (vr.regime === 'High Vol') {
-        score = Math.round(score * vr.buyMult);
-        reasons.push('高波動折扣×0.85');
-      }
-      if (vr.regime === 'Low Vol') reasons.push('低波動:等突破');
-
-      // K線型態整合
-      score += cp.score;
-      if (cp.patterns.length) reasons.push(`K線:${cp.patterns[0]}`);
-
-      // 存儲新模組結果
-      r.ofi  = ofi;
-      r.ms   = ms;
-      r.mlm  = mlm;
-      r.vr   = vr;
-      r.cp   = cp;
-      r.atr_stop = vr.atrStop;
-
-      // Action（更新後分數）
       if (score >= this.cfg.BUY_SCORE)         { r.action = 'BUY';  r.action_zh = '買進 ▲'; r.grade = '強勢進場'; }
       else if (score >= this.cfg.HOLD_SCORE)   { r.action = 'WATCH'; r.action_zh = '觀察 ◆'; r.grade = '等待進場點'; }
       else if (bos.choch_bear || bos.bos_bear) { r.action = 'SELL'; r.action_zh = '賣出 ▼'; r.grade = '空頭結構'; }
@@ -1607,192 +1603,188 @@ class ICTSMCScorer {
 
   _checkMtfConfluence(rows1d, rows1h, rows15m) {
     let bulls = 0;
-    for (const rows of [rows1d, rows1h, rows15m]) {
+    const allRows = [rows1d, rows1h, rows15m];
+    for (let i = 0; i < allRows.length; i++) {
+      const rows = allRows[i];
       if (!rows || rows.length < 25) continue;
       const close = rows.map(r => r.close);
       const ma20arr = DataService.rollingMean(close, 20);
-      const ma20 = ma20arr.at(-1);
-      const latest = close.at(-1);
+      const ma20 = ma20arr[ma20arr.length - 1];
+      const latest = close[close.length - 1];
       const bos = this.engine.detectBosChoch(rows);
       if (latest > ma20 && (bos.bos_bull || bos.structure === 'BULLISH')) bulls++;
     }
     return bulls >= 2;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MODULE A: OFI 訂單流失衡 (Order Flow Imbalance · Z-Score版)
-  // ═══════════════════════════════════════════════════════════════════
   calcOFI(rows) {
     const n = rows.length;
     const out = { signal: 'Neutral', zScore: 0, liquidityRisk: false, score: 0, advice: '' };
     if (n < 25) return out;
     const close = rows.map(r => r.close), vol = rows.map(r => r.volume);
-    const ofi = vol.map((v, i) => i===0 ? 0 : v * Math.sign(close[i] - close[i-1]));
-    const ofiCum = ofi.map((_, i) => i<19 ? NaN : ofi.slice(i-19,i+1).reduce((a,b)=>a+b,0));
+    const ofi = vol.map((v, i) => i === 0 ? 0 : v * Math.sign(close[i] - close[i - 1]));
+    const ofiCum = ofi.map((_, i) => i < 19 ? NaN : ofi.slice(i - 19, i + 1).reduce((a, b) => a + b, 0));
     const zArr = ofiCum.map((v, i) => {
       if (i < 59 || isNaN(v)) return NaN;
-      const sl = ofiCum.slice(i-59,i+1).filter(x=>!isNaN(x));
+      const sl = ofiCum.slice(i - 59, i + 1).filter(x => !isNaN(x));
       if (sl.length < 10) return NaN;
-      const m = sl.reduce((a,b)=>a+b,0)/sl.length;
-      const s = Math.sqrt(sl.map(x=>(x-m)**2).reduce((a,b)=>a+b,0)/sl.length);
-      return s>0 ? (v-m)/s : 0;
+      const m = sl.reduce((a, b) => a + b, 0) / sl.length;
+      const s = Math.sqrt(sl.map(x => Math.pow(x - m, 2)).reduce((a, b) => a + b, 0) / sl.length);
+      return s > 0 ? (v - m) / s : 0;
     });
-    const z = zArr.at(-1) || 0; out.zScore = isNaN(z) ? 0 : +z.toFixed(2);
-    if (z > 2)      { out.signal='Strong Buy';  out.score= 6; out.advice=`🐋機構大量吸籌(Z=${z.toFixed(1)})`; }
-    else if (z > 1) { out.signal='Buy';          out.score= 3; out.advice=`📈機構緩步建倉(Z=${z.toFixed(1)})`; }
-    else if (z<-2)  { out.signal='Strong Sell';  out.score=-6; out.advice=`⚠️機構大量出貨(Z=${z.toFixed(1)})`; }
-    else if (z<-1)  { out.signal='Sell';          out.score=-3; out.advice=`📉機構緩步減倉(Z=${z.toFixed(1)})`; }
-    else            { out.advice='⚖️訂單流平衡'; }
-    const vol20avg = vol.slice(-20).reduce((a,b)=>a+b,0)/20;
-    const vol20std = Math.sqrt(vol.slice(-20).map(v=>(v-vol20avg)**2).reduce((a,b)=>a+b,0)/20);
-    out.liquidityRisk = (vol20std/(vol20avg+1e-9)) > 0.5;
-    if (out.liquidityRisk) { out.score -= 2; out.advice += ' 💧流動性偏低'; }
+    const z = zArr[zArr.length - 1] || 0; 
+    out.zScore = isNaN(z) ? 0 : +z.toFixed(2);
+    if (z > 2)      { out.signal='Strong Buy';  out.score= 13; out.advice=`機構大量吸籌 (Z=${z.toFixed(1)})`; }
+    else if (z > 1) { out.signal='Buy';          out.score= 5; out.advice=`買盤偏強 (Z=${z.toFixed(1)})`; }
+    else if (z < -2){ out.signal='Strong Sell';  out.score=-13; out.advice=`機構大量出貨 (Z=${z.toFixed(1)})`; }
+    else if (z < -1){ out.signal='Sell';          out.score=-5; out.advice=`賣盤偏強 (Z=${z.toFixed(1)})`; }
+    else            { out.advice='訂單流平衡'; }
+    const vol20avg = vol.slice(vol.length - 20).reduce((a, b) => a + b, 0) / 20;
+    const vol20std = Math.sqrt(vol.slice(vol.length - 20).map(v => Math.pow(v - vol20avg, 2)).reduce((a, b) => a + b, 0) / 20);
+    out.liquidityRisk = (vol20std / (vol20avg + 1e-9)) > 0.5;
+    if (out.liquidityRisk) { out.score -= 2; out.advice += ' | 流動性風險偏高'; }
     return out;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MODULE B: 市場微觀結構 (Market Microstructure)
-  // ═══════════════════════════════════════════════════════════════════
   calcMicrostructure(rows) {
     const n = rows.length;
     const out = { liquidityScore: 0, depthQuality: 'Unknown', score: 0, advice: '' };
     if (n < 25) return out;
-    const close = rows.map(r=>r.close), vol = rows.map(r=>r.volume);
-    const hlSpread = rows.map(r=>(r.high-r.low)/(r.close+1e-9));
-    const avgSpread20 = hlSpread.slice(-20).reduce((a,b)=>a+b,0)/20;
-    const sorted = [...hlSpread].sort((a,b)=>a-b);
-    const medSpread = sorted[Math.floor(sorted.length/2)];
-    const pctChg = close.map((v,i)=>i===0?0:Math.abs((v-close[i-1])/(close[i-1]+1e-9)));
-    const volMA50 = vol.slice(-50).reduce((a,b)=>a+b,0)/Math.min(vol.length,50);
-    const pi = pctChg.map((p,i)=>p/((vol[i]/volMA50)+1e-9));
-    const pi20 = pi.slice(-20).reduce((a,b)=>a+b,0)/20;
-    const piSorted = [...pi].sort((a,b)=>a-b); const medPI = piSorted[Math.floor(piSorted.length/2)];
-    const v20a = vol.slice(-20).reduce((a,b)=>a+b,0)/20;
-    const v20s = Math.sqrt(vol.slice(-20).map(v=>(v-v20a)**2).reduce((a,b)=>a+b,0)/20);
-    const vv = v20s/(v20a+1e-9);
-    out.depthQuality = vv<0.3?'Deep':vv<0.6?'Moderate':'Shallow';
-    let liq=0;
-    if(avgSpread20<medSpread) liq+=2;
-    if(out.depthQuality==='Deep') liq+=3;
-    if(pi20<medPI) liq+=2;
-    out.liquidityScore=liq;
-    if(liq>=6)     { out.score= 2; out.advice='💎極佳流動性-適合大額交易'; }
-    else if(liq>=4){ out.score= 0; out.advice='✅良好流動性'; }
-    else if(liq<=2){ out.score=-2; out.advice='⚠️流動性不足-滑價風險高'; }
-    else           { out.advice='🔶流動性普通'; }
+    const close = rows.map(r => r.close), vol = rows.map(r => r.volume);
+    const hlSpread = rows.map(r => (r.high - r.low) / (r.close + 1e-9));
+    const avgSpread20 = hlSpread.slice(hlSpread.length - 20).reduce((a, b) => a + b, 0) / 20;
+    const sorted = hlSpread.slice().sort((a, b) => a - b);
+    const medSpread = sorted[Math.floor(sorted.length / 2)];
+    const pctChg = close.map((v, i) => i === 0 ? 0 : Math.abs((v - close[i - 1]) / (close[i - 1] + 1e-9)));
+    const volMA50 = vol.slice(Math.max(vol.length - 50, 0)).reduce((a, b) => a + b, 0) / Math.min(vol.length, 50);
+    const pi = pctChg.map((p, i) => p / ((vol[i] / volMA50) + 1e-9));
+    const pi20 = pi.slice(pi.length - 20).reduce((a, b) => a + b, 0) / 20;
+    const piSorted = pi.slice().sort((a, b) => a - b); 
+    const medPI = piSorted[Math.floor(piSorted.length / 2)];
+    const v20a = vol.slice(vol.length - 20).reduce((a, b) => a + b, 0) / 20;
+    const v20s = Math.sqrt(vol.slice(vol.length - 20).map(v => Math.pow(v - v20a, 2)).reduce((a, b) => a + b, 0) / 20);
+    const vv = v20s / (v20a + 1e-9);
+    out.depthQuality = vv < 0.3 ? 'Deep' : vv < 0.6 ? 'Medium' : 'Shallow';
+    let liq = 0;
+    if(avgSpread20 < medSpread) liq += 2;
+    if(out.depthQuality === 'Deep') liq += 2;
+    else if(out.depthQuality === 'Medium') liq += 1;
+    if(pi20 < medPI) liq += 2;
+    out.liquidityScore = liq;
+    if(liq >= 5)     { out.score= 2; out.advice='極佳流動性-適合大額交易'; }
+    else if(liq >= 3){ out.score= 0; out.advice='良好流動性'; }
+    else if(liq <= 2){ out.score=-2; out.advice='流動性不足-滑價風險高'; }
+    else             { out.advice='流動性普通'; }
     return out;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MODULE C: ML 增強型動量 (ML-Enhanced Momentum)
-  // ═══════════════════════════════════════════════════════════════════
   calcMLMomentum(rows) {
     const n = rows.length;
     const out = { signal:'Neutral', percentile:50, reversalRisk:0, score:0, advice:'', momScore:0 };
     if (n < 65) return out;
-    const close = rows.map(r=>r.close), vol = rows.map(r=>r.volume);
-    const pctChg = (period) => { const c=close.at(-1), p=close[n-1-period]; return p>0?(c-p)/p:0; };
-    const mom5=pctChg(5), mom10=pctChg(10), mom20=pctChg(20), mom60=n>=62?pctChg(60):pctChg(20);
-    const ms = mom5*0.4+mom10*0.3+mom20*0.2+mom60*0.1; out.momScore=+ms.toFixed(4);
-    if (n>=125) {
-      const hist=[];
-      for(let i=124;i<n;i++){
-        const c_=close[i],p5=close[i-5],p10=close[i-10],p20=close[i-20],p60=close[Math.max(i-60,0)];
-        hist.push((c_-p5)/(p5+1e-9)*0.4+(c_-p10)/(p10+1e-9)*0.3+(c_-p20)/(p20+1e-9)*0.2+(c_-p60)/(p60+1e-9)*0.1);
+    const close = rows.map(r => r.close), vol = rows.map(r => r.volume);
+    const pctChg = (period) => { const c = close[n - 1], p = close[n - 1 - period]; return p > 0 ? (c - p) / p : 0; };
+    const mom5 = pctChg(5), mom10 = pctChg(10), mom20 = pctChg(20), mom60 = n >= 62 ? pctChg(60) : pctChg(20);
+    const ms = mom5 * 0.4 + mom10 * 0.3 + mom20 * 0.2 + mom60 * 0.1; 
+    out.momScore = +ms.toFixed(4);
+    if (n >= 125) {
+      const hist = [];
+      for (let i = 124; i < n; i++) {
+        const c_ = close[i], p5 = close[i - 5], p10 = close[i - 10], p20 = close[i - 20], p60 = close[Math.max(i - 60, 0)];
+        hist.push((c_ - p5) / (p5 + 1e-9) * 0.4 + (c_ - p10) / (p10 + 1e-9) * 0.3 + (c_ - p20) / (p20 + 1e-9) * 0.2 + (c_ - p60) / (p60 + 1e-9) * 0.1);
       }
-      hist.sort((a,b)=>a-b);
-      out.percentile = +(hist.filter(x=>x<=ms).length/hist.length*100).toFixed(1);
+      hist.sort((a, b) => a - b);
+      out.percentile = +(hist.filter(x => x <= ms).length / hist.length * 100).toFixed(1);
     }
-    const v5 = vol.slice(-5).reduce((a,b)=>a+b,0)/5, v20=vol.slice(-20).reduce((a,b)=>a+b,0)/20;
-    const volOk = ms>0 && v5>v20;
-    const delta = close.map((v,i)=>i===0?0:v-close[i-1]);
-    const ag = DataService.ewmMean(delta.map(d=>Math.max(d,0)),13).at(-1);
-    const al = DataService.ewmMean(delta.map(d=>Math.max(-d,0)),13).at(-1);
-    const rsi = 100-100/(1+ag/(al+1e-9));
-    if (out.percentile>95&&rsi>70) out.reversalRisk= 1;
-    if (out.percentile< 5&&rsi<30) out.reversalRisk=-1;
-    if (out.percentile>75&&volOk&&out.reversalRisk===0)
-      { out.signal='Strong Uptrend'; out.score=5; out.advice=`🚀強勢上升(百分位:${out.percentile.toFixed(0)}%)`; }
-    else if (out.percentile>60&&volOk)
-      { out.signal='Uptrend'; out.score=2; out.advice=`📈上升趨勢(百分位:${out.percentile.toFixed(0)}%)`; }
-    else if (out.percentile<25&&out.reversalRisk===0)
-      { out.signal='Downtrend'; out.score=-4; out.advice=`📉下降趨勢(百分位:${out.percentile.toFixed(0)}%)`; }
-    else { out.advice=`➡️動量中性(百分位:${out.percentile.toFixed(0)}%)`; }
-    if (out.reversalRisk=== 1){ out.score-=4; out.advice+=' ⚠️超買反轉風險'; }
-    if (out.reversalRisk===-1){ out.score+=2; out.advice+=' 💎超賣反彈機會'; }
+    const v5 = vol.slice(vol.length - 5).reduce((a, b) => a + b, 0) / 5;
+    const v20 = vol.slice(vol.length - 20).reduce((a, b) => a + b, 0) / 20;
+    const volOk = ms > 0 && v5 > v20;
+    const delta = close.map((v, i) => i === 0 ? 0 : v - close[i - 1]);
+    const ag = DataService.ewmMean(delta.map(d => Math.max(d, 0)), 13)[n - 1];
+    const al = DataService.ewmMean(delta.map(d => Math.max(-d, 0)), 13)[n - 1];
+    const rsi = 100 - 100 / (1 + ag / (al + 1e-9));
+    if (out.percentile > 95 && rsi > 70) out.reversalRisk = 1;
+    if (out.percentile < 5 && rsi < 30) out.reversalRisk = -1;
+    if (out.percentile > 75 && volOk && out.reversalRisk === 0)
+      { out.signal='Strong Uptrend'; out.score=5; out.advice=`強勢上升(百分位:${out.percentile.toFixed(0)}%)`; }
+    else if (out.percentile > 60 && volOk)
+      { out.signal='Uptrend'; out.score=2; out.advice=`上升趨勢(百分位:${out.percentile.toFixed(0)}%)`; }
+    else if (out.percentile < 25 && out.reversalRisk === 0)
+      { out.signal='Downtrend'; out.score=-4; out.advice=`下降趨勢(百分位:${out.percentile.toFixed(0)}%)`; }
+    else { out.advice=`動量中性(百分位:${out.percentile.toFixed(0)}%)`; }
+    if (out.reversalRisk === 1){ out.score -= 4; out.advice += ' 超買反轉風險'; }
+    if (out.reversalRisk === -1){ out.score += 2; out.advice += ' 超賣反彈機會'; }
     return out;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MODULE D: 波動率政權識別 (Volatility Regime)
-  // ═══════════════════════════════════════════════════════════════════
   calcVolRegime(rows) {
     const n = rows.length;
     const out = { regime:'Normal', strategy:'Trend Following', buyMult:1.0, sellMult:1.0, advice:'', atrStop:0 };
     if (n < 25) return out;
-    const close = rows.map(r=>r.close), high=rows.map(r=>r.high), low=rows.map(r=>r.low);
-    const ret = close.map((v,i)=>i===0?0:(v-close[i-1])/(close[i-1]+1e-9));
-    const rv20sl = ret.slice(-20); const m=rv20sl.reduce((a,b)=>a+b,0)/20;
-    const rv = Math.sqrt(rv20sl.map(r=>(r-m)**2).reduce((a,b)=>a+b,0)/20) * Math.sqrt(252);
-    const histRv=[]; const wn=20;
-    for(let i=wn;i<Math.min(n,272);i++){
-      const sl=ret.slice(i-wn,i); const mu=sl.reduce((a,b)=>a+b,0)/wn;
-      histRv.push(Math.sqrt(sl.map(r=>(r-mu)**2).reduce((a,b)=>a+b,0)/wn)*Math.sqrt(252));
+    const close = rows.map(r => r.close);
+    const ret = close.map((v, i) => i === 0 ? 0 : (v - close[i - 1]) / (close[i - 1] + 1e-9));
+    const rv20sl = ret.slice(ret.length - 20); 
+    const m = rv20sl.reduce((a, b) => a + b, 0) / 20;
+    const rv = Math.sqrt(rv20sl.map(r => Math.pow(r - m, 2)).reduce((a, b) => a + b, 0) / 20) * Math.sqrt(252);
+    const histRv = []; const wn = 20;
+    for (let i = wn; i < Math.min(n, 272); i++) {
+      const sl = ret.slice(i - wn, i); 
+      const mu = sl.reduce((a, b) => a + b, 0) / wn;
+      histRv.push(Math.sqrt(sl.map(r => Math.pow(r - mu, 2)).reduce((a, b) => a + b, 0) / wn) * Math.sqrt(252));
     }
-    histRv.sort((a,b)=>a-b);
-    const rv75=histRv[Math.floor(histRv.length*0.75)]||rv*1.2;
-    const rv25=histRv[Math.floor(histRv.length*0.25)]||rv*0.8;
-    if (rv>rv75)     { out.regime='High Vol'; out.strategy='Mean Reversion'; out.buyMult=0.85; out.sellMult=1.10; }
-    else if(rv<rv25) { out.regime='Low Vol';  out.strategy='Breakout'; }
-    const tr=rows.map((r,i)=>i===0?r.high-r.low:Math.max(r.high-r.low,Math.abs(r.high-rows[i-1].close),Math.abs(r.low-rows[i-1].close)));
-    out.atrStop = +(tr.slice(-14).reduce((a,b)=>a+b,0)/14*2).toFixed(4);
-    if(out.regime==='High Vol') out.advice=`⚡高波動(RV=${(rv*100).toFixed(1)}%) 降低部位 ATR止損=${out.atrStop}`;
-    else if(out.regime==='Low Vol') out.advice=`😴低波動(RV=${(rv*100).toFixed(1)}%) 等待突破 ATR止損=${out.atrStop}`;
-    else out.advice=`📊正常波動(RV=${(rv*100).toFixed(1)}%) ${out.strategy}`;
+    histRv.sort((a, b) => a - b);
+    const rv75 = histRv[Math.floor(histRv.length * 0.75)] || (rv * 1.2);
+    const rv25 = histRv[Math.floor(histRv.length * 0.25)] || (rv * 0.8);
+    if (rv > rv75)     { out.regime='High Vol'; out.strategy='Mean Reversion'; out.buyMult=0.85; out.sellMult=1.10; }
+    else if(rv < rv25) { out.regime='Low Vol';  out.strategy='Breakout'; }
+    const tr = rows.map((r, i) => i === 0 ? r.high - r.low : Math.max(r.high - r.low, Math.abs(r.high - rows[i - 1].close), Math.abs(r.low - rows[i - 1].close)));
+    out.atrStop = +(tr.slice(tr.length - 14).reduce((a, b) => a + b, 0) / 14 * 2).toFixed(4);
+    if (out.regime === 'High Vol') out.advice=`高波動(RV=${(rv * 100).toFixed(1)}%) 降低部位 ATR止損=${out.atrStop}`;
+    else if(out.regime === 'Low Vol') out.advice=`低波動(RV=${(rv * 100).toFixed(1)}%) 等待突破 ATR止損=${out.atrStop}`;
+    else out.advice=`正常波動(RV=${(rv * 100).toFixed(1)}%) ${out.strategy}`;
     return out;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MODULE E: K線型態辨識 (Candlestick Patterns · 原生JS)
-  // ═══════════════════════════════════════════════════════════════════
   calcCandlePatterns(rows) {
-    const out = { score:0, patterns:[], advice:'' };
+    const out = { score: 0, patterns: [], advice: '' };
     if (rows.length < 3) return out;
-    const n=rows.length, r0=rows[n-1], r1=rows[n-2], r2=rows[n-3];
-    const body=r=>Math.abs(r.close-r.open), range=r=>r.high-r.low+1e-9;
-    const isBull=r=>r.close>r.open, isBear=r=>r.close<r.open;
-    const uw=r=>r.high-Math.max(r.open,r.close), lw=r=>Math.min(r.open,r.close)-r.low;
-    const isDoji=r=>body(r)/range(r)<0.1;
-    const P=out.patterns; let s=0;
-    // ─ 單根型態 ─
-    if(lw(r0)>2*body(r0)&&uw(r0)<body(r0)*0.5&&body(r0)/range(r0)>0.05){P.push('🔨錘頭線');s+=1.5;}
-    if(uw(r0)>2*body(r0)&&lw(r0)<body(r0)*0.5&&isBull(r0)&&body(r0)/range(r0)>0.05){P.push('🔃倒錘頭');s+=1;}
-    if(uw(r0)>2*body(r0)&&lw(r0)<body(r0)*0.5&&isBear(r0)){P.push('⭐流星線');s-=1.5;}
-    if(lw(r0)>2*body(r0)&&uw(r0)<body(r0)*0.5&&isBear(r0)){P.push('🪢上吊線');s-=1.5;}
-    if(isDoji(r0)&&lw(r0)>range(r0)*0.6){P.push('🐉蜻蜓十字');s+=1.5;}
-    if(isDoji(r0)&&uw(r0)>range(r0)*0.6){P.push('🪦墓碑十字');s-=1.5;}
-    // ─ 雙根型態 ─
-    if(isBear(r1)&&isBull(r0)&&r0.open<r1.close&&r0.close>r1.open){P.push('🟢多頭吞噬+2');s+=2;}
-    if(isBull(r1)&&isBear(r0)&&r0.open>r1.close&&r0.close<r1.open){P.push('🔴空頭吞噬-2');s-=2;}
-    if(isBear(r1)&&isBull(r0)&&r0.open<r1.close&&r0.close>(r1.open+r1.close)/2){P.push('⚡刺透型態');s+=2;}
-    if(isBull(r1)&&isBear(r0)&&r0.open>r1.close&&r0.close<(r1.open+r1.close)/2){P.push('☁️烏雲蓋頂');s-=2;}
-    // ─ 三根型態 ─
-    if(isBear(r2)&&body(r1)/range(r1)<0.3&&isBull(r0)&&r0.close>(r2.open+r2.close)/2&&body(r2)>body(r1)*2){P.push('🌅晨星+2');s+=2;}
-    if(isBull(r2)&&body(r1)/range(r1)<0.3&&isBear(r0)&&r0.close<(r2.open+r2.close)/2&&body(r2)>body(r1)*2){P.push('🌆黃昏星-2');s-=2;}
-    if(isBull(r2)&&isBull(r1)&&isBull(r0)&&r0.close>r1.close&&r1.close>r2.close){P.push('⚔️三白兵+2');s+=2;}
-    if(isBear(r2)&&isBear(r1)&&isBear(r0)&&r0.close<r1.close&&r1.close<r2.close){P.push('🦅三烏鴉-2');s-=2;}
-    if(isBear(r2)&&isDoji(r1)&&isBull(r0)&&r1.high<r2.low&&body(r0)>body(r2)*0.5){P.push('👶棄嬰多+2');s+=2;}
-    if(isBull(r2)&&isDoji(r1)&&isBear(r0)&&r1.low>r2.high&&body(r0)>body(r2)*0.5){P.push('👶棄嬰空-2');s-=2;}
-    out.score=s; out.advice=P.length?P.join(' · '):'無明顯K線型態';
+    const n = rows.length, r0 = rows[n - 1], r1 = rows[n - 2], r2 = rows[n - 3];
+    const body = r => Math.abs(r.close - r.open);
+    const range = r => r.high - r.low + 1e-9;
+    const isBull = r => r.close > r.open;
+    const isBear = r => r.close < r.open;
+    const uw = r => r.high - Math.max(r.open, r.close);
+    const lw = r => Math.min(r.open, r.close) - r.low;
+    const isDoji = r => body(r) / range(r) < 0.1;
+    const P = out.patterns; let s = 0;
+    
+    if(lw(r0) > 2 * body(r0) && uw(r0) < body(r0) * 0.5 && body(r0) / range(r0) > 0.05){ P.push('錘頭線'); s += 1.5; }
+    if(uw(r0) > 2 * body(r0) && lw(r0) < body(r0) * 0.5 && isBull(r0) && body(r0) / range(r0) > 0.05){ P.push('倒錘頭'); s += 1; }
+    if(uw(r0) > 2 * body(r0) && lw(r0) < body(r0) * 0.5 && isBear(r0)){ P.push('流星線'); s -= 1.5; }
+    if(lw(r0) > 2 * body(r0) && uw(r0) < body(r0) * 0.5 && isBear(r0)){ P.push('上吊線'); s -= 1.5; }
+    if(isDoji(r0) && lw(r0) > range(r0) * 0.6){ P.push('蜻蜓十字'); s += 1.5; }
+    if(isDoji(r0) && uw(r0) > range(r0) * 0.6){ P.push('墓碑十字'); s -= 1.5; }
+    
+    if(isBear(r1) && isBull(r0) && r0.open < r1.close && r0.close > r1.open){ P.push('多頭吞噬'); s += 2; }
+    if(isBull(r1) && isBear(r0) && r0.open > r1.close && r0.close < r1.open){ P.push('空頭吞噬'); s -= 2; }
+    if(isBear(r1) && isBull(r0) && r0.open < r1.close && r0.close > (r1.open + r1.close) / 2){ P.push('刺透型態'); s += 2; }
+    if(isBull(r1) && isBear(r0) && r0.open > r1.close && r0.close < (r1.open + r1.close) / 2){ P.push('烏雲蓋頂'); s -= 2; }
+    
+    if(isBear(r2) && body(r1) / range(r1) < 0.3 && isBull(r0) && r0.close > (r2.open + r2.close) / 2 && body(r2) > body(r1) * 2){ P.push('晨星'); s += 2; }
+    if(isBull(r2) && body(r1) / range(r1) < 0.3 && isBear(r0) && r0.close < (r2.open + r2.close) / 2 && body(r2) > body(r1) * 2){ P.push('黃昏星'); s -= 2; }
+    if(isBull(r2) && isBull(r1) && isBull(r0) && r0.close > r1.close && r1.close > r2.close){ P.push('三白兵'); s += 2; }
+    if(isBear(r2) && isBear(r1) && isBear(r0) && r0.close < r1.close && r1.close < r2.close){ P.push('三烏鴉'); s -= 2; }
+    if(isBear(r2) && isDoji(r1) && isBull(r0) && r1.high < r2.low && body(r0) > body(r2) * 0.5){ P.push('棄嬰多'); s += 2; }
+    if(isBull(r2) && isDoji(r1) && isBear(r0) && r1.low > r2.high && body(r0) > body(r2) * 0.5){ P.push('棄嬰空'); s -= 2; }
+    
+    out.score = s; 
+    out.advice = P.length ? P.join(' · ') : '無明顯K線型態';
     return out;
   }
 }
 
-
 // ── app.js ─────────────────────────────────────────────────────────────────
-// app.js — MJ Sniper v9.0 Main Application Controller
 
-// ── State ───────────────────────────────────────────────────────────────────
 const State = {
   running: false,
   r1Results: { passed: [], failed: [] },
@@ -1801,7 +1793,6 @@ const State = {
   log: [],
 };
 
-// ── DOM helpers ─────────────────────────────────────────────────────────────
 const $  = id => document.getElementById(id);
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
@@ -1810,7 +1801,6 @@ const el = (tag, cls, html) => {
   return e;
 };
 
-// ── Logger ───────────────────────────────────────────────────────────────────
 function log(msg, type = 'info') {
   State.log.push({ msg, type, ts: new Date().toLocaleTimeString() });
   const div = $('log');
@@ -1820,7 +1810,6 @@ function log(msg, type = 'info') {
   div.scrollTop = div.scrollHeight;
 }
 
-// ── Kill Zone ticker ─────────────────────────────────────────────────────────
 function updateKillZone() {
   const kz = new KillZoneFilter();
   const zone = kz.currentZone();
@@ -1830,13 +1819,14 @@ function updateKillZone() {
     el$.className = 'kill-zone active';
   } else {
     const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-    el$.textContent = `⏸ 非Kill Zone  台北 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    let minutes = String(now.getMinutes());
+    if (minutes.length < 2) minutes = '0' + minutes;
+    el$.textContent = `⏸ 非Kill Zone  台北 ${now.getHours()}:${minutes}`;
     el$.className = 'kill-zone inactive';
   }
 }
 setInterval(updateKillZone, 30000);
 
-// ── Run Button ───────────────────────────────────────────────────────────────
 $('btn-run').addEventListener('click', async () => {
   if (State.running) return;
   State.running = true;
@@ -1860,34 +1850,37 @@ async function runAnalysis() {
   log('🚀 MJ Sniper v9.0 啟動 · ICT/SMC Elite System', 'header');
   updateKillZone();
 
-  // ── Round 1: ETF Screener ────────────────────────────────────────────────
   log('════ 第一輪: ETF賽道篩選 ════', 'section');
   const screener = new ETFPreScreener(CONFIG);
-  const { passed, failed } = await screener.scanAll(ETF_UNIVERSE, msg => log(msg));
-  State.r1Results = { passed, failed };
+  const resR1 = await screener.scanAll(ETF_UNIVERSE, msg => log(msg));
+  const passed = resR1.passed;
+  const failed = resR1.failed;
+  State.r1Results = { passed: passed, failed: failed };
 
   log(`✅ 通過: ${passed.length} 檔  ❌ 淘汰: ${failed.length} 檔`, 'success');
   renderR1Table(passed, failed);
 
-  // ── Select top ETFs by market ────────────────────────────────────────────
   const topEtfs = selectTopEtfsByMarket(passed, CONFIG.R1_MIN_KEEP_BY_MARKET, CONFIG.R1_TOP_N_ETF);
   State.topEtfs = topEtfs;
   log(`📋 第二輪選用ETF: ${topEtfs.join(', ')}`, 'info');
 
-  // ── Round 2: ICT/SMC Scorer ─────────────────────────────────────────────
   log('════ 第二輪: ICT/SMC 精密評分 ════', 'section');
   const scorer  = new ICTSMCScorer(CONFIG);
-  // ── 爬蟲取得各ETF真實成分股清單 ────────────────────────────────────
   log('📡 爬蟲取得成分股清單...', 'section');
   const allStks = [];
-  const seen    = new Set();
-  for (const etf of topEtfs) {
+  const seen    = {};
+  for (let i = 0; i < topEtfs.length; i++) {
+    const etf = topEtfs[i];
     log(`  → 取得 ${etf} 成分股...`, 'info');
     const holdings = await DataService.getETFHoldings(etf, CONFIG.R1_TOP_HOLDINGS);
     const source   = holdings.length >= 3 ? '🌐爬蟲' : '📋備援';
-    log(`  → ${etf}: ${source} ${holdings.length} 檔 [${holdings.slice(0,5).join(',')}...]`, 'info');
-    for (const stk of holdings) {
-      if (!seen.has(stk)) { allStks.push({ stk, etf }); seen.add(stk); }
+    log(`  → ${etf}: ${source} ${holdings.length} 檔 [${holdings.slice(0, 5).join(',')}...]`, 'info');
+    for (let j = 0; j < holdings.length; j++) {
+      const stk = holdings[j];
+      if (!seen[stk]) { 
+        allStks.push({ stk: stk, etf: etf }); 
+        seen[stk] = true; 
+      }
     }
     await sleep(CONFIG.REQUEST_DELAY);
   }
@@ -1895,15 +1888,16 @@ async function runAnalysis() {
   log(`📊 分析 ${allStks.length} 檔成分股...`, 'info');
   const r2 = [];
   let done = 0;
-  for (const { stk, etf } of allStks) {
-    const res = await scorer.analyze(stk, etf);
+  for (let i = 0; i < allStks.length; i++) {
+    const item = allStks[i];
+    const res = await scorer.analyze(item.stk, item.etf);
     r2.push(res);
     done++;
     if (res.success) {
-      const icon = res.action === 'BUY' ? '🟢' : res.action === 'WATCH' ? '🟡' : res.action === 'SELL' ? '🔴' : '⚪';
-      log(`${icon} ${stk} (${etf}) score=${res.score} ${res.action_zh}`, res.action === 'BUY' ? 'buy' : res.action === 'SELL' ? 'sell' : 'info');
+      const icon = res.action === 'BUY' ? '●' : res.action === 'WATCH' ? '◆' : res.action === 'SELL' ? '▼' : '─';
+      log(`${icon} ${item.stk} (${item.etf}) score=${res.score} ${res.action_zh}`, res.action === 'BUY' ? 'buy' : res.action === 'SELL' ? 'sell' : 'info');
     } else {
-      log(`⚠ ${stk}: ${res.error || '無資料'}`, 'warn');
+      log(`⚠ ${item.stk}: ${res.error || '無資料'}`, 'warn');
     }
     $('stats-bar').textContent = `進度: ${done}/${allStks.length}`;
     await sleep(CONFIG.REQUEST_DELAY);
@@ -1916,26 +1910,46 @@ async function runAnalysis() {
   });
   State.r2Results = r2;
   renderR2Table(r2);
-  document.dispatchEvent(new CustomEvent('r2-complete', { detail: r2 }));
+  
+  if (window.CustomEvent) {
+      document.dispatchEvent(new CustomEvent('r2-complete', { detail: r2 }));
+  }
+  
   document.getElementById('r1-count').textContent =
     State.r1Results.passed.length + '/' +
     (State.r1Results.passed.length + State.r1Results.failed.length) + ' 通過';
 
-  const buyCount = r2.filter(r => r.action === 'BUY').length;
-  log(`🎯 分析完成 · BUY: ${buyCount} · WATCH: ${r2.filter(r=>r.action==='WATCH').length}`, 'success');
-  $('stats-bar').textContent = `✅ 完成 | 買進訊號: ${buyCount} | WATCH: ${r2.filter(r=>r.action==='WATCH').length} | 略過: ${r2.filter(r=>r.action==='SKIP').length}`;
+  let buyCount = 0;
+  let watchCount = 0;
+  let skipCount = 0;
+  for(let i=0; i<r2.length; i++){
+      if(r2[i].action === 'BUY') buyCount++;
+      if(r2[i].action === 'WATCH') watchCount++;
+      if(r2[i].action === 'SKIP') skipCount++;
+  }
+
+  log(`🎯 分析完成 · BUY: ${buyCount} · WATCH: ${watchCount}`, 'success');
+  $('stats-bar').textContent = `✅ 完成 | 買進訊號: ${buyCount} | WATCH: ${watchCount} | 略過: ${skipCount}`;
   $('btn-export').disabled = false;
 }
 
-// ── Render R1 Table ──────────────────────────────────────────────────────────
 function renderR1Table(passed, failed) {
   const tbody = $('r1-table-body');
   tbody.innerHTML = '';
-  const all = [
-    ...passed.map(r => ({ ...r, _pass: true })),
-    ...failed.slice(0, 20).map(r => ({ ...r, _pass: false })),
-  ];
-  for (const r of all) {
+  const all = [];
+  for(let i = 0; i < passed.length; i++) {
+      const copy = Object.assign({}, passed[i]);
+      copy._pass = true;
+      all.push(copy);
+  }
+  for(let i = 0; i < Math.min(failed.length, 20); i++) {
+      const copy = Object.assign({}, failed[i]);
+      copy._pass = false;
+      all.push(copy);
+  }
+
+  for (let i = 0; i < all.length; i++) {
+    const r = all[i];
     const tr = document.createElement('tr');
     tr.className = r._pass ? 'row-pass' : 'row-fail';
     const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`;
@@ -1943,7 +1957,7 @@ function renderR1Table(passed, failed) {
     tr.innerHTML = `
       <td class="mono bold">${r.ticker}</td>
       <td>${r.market}</td>
-      <td class="mono">${r.price ?? '-'}</td>
+      <td class="mono">${r.price !== null ? r.price : '-'}</td>
       <td class="mono">${change}</td>
       <td class="score-cell">${r.score}</td>
       <td>${r.liquidity_ok ? '✅' : '❌'}</td>
@@ -1957,7 +1971,6 @@ function renderR1Table(passed, failed) {
   }
 }
 
-// ── Render R2 Table ──────────────────────────────────────────────────────────
 function renderR2Table(results) {
   const tbody = $('r2-table-body');
   tbody.innerHTML = '';
@@ -1965,132 +1978,190 @@ function renderR2Table(results) {
   const top = success.slice(0, 60);
   $('r2-count').textContent = success.length + ' 檔';
 
-  for (const r of top) {
+  for (let i = 0; i < top.length; i++) {
+    const r = top[i];
     const tr = document.createElement('tr');
     tr.className = `row-${r.action.toLowerCase()}`;
 
     const actionClass = r.action === 'BUY' ? 'green bold' : r.action === 'WATCH' ? 'amber' : r.action === 'SELL' ? 'red' : 'dim';
     const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`;
     const struct = r.structure === 'BULLISH' ? '<span class="green">●</span>' : r.structure === 'BEARISH' ? '<span class="red">●</span>' : '<span class="dim">●</span>';
-    const signals = [
-      r.stop_hunt?.bull_stop_hunt ? '<span class="green" title="Stop Hunt">SH</span>' : '',
-      r.fvg?.in_bullish_fvg ? '<span class="green" title="Fair Value Gap">FVG</span>' : '',
-      r.ob?.in_bull_ob ? '<span class="green" title="Order Block">OB</span>' : '',
-      r.ote?.in_ote ? '<span class="amber" title="Optimal Trade Entry">OTE</span>' : '',
-      r.mtf_bull ? '<span class="cyan" title="Multi-Timeframe Confluence">MTF</span>' : '',
-    ].filter(Boolean).join(' ');
+    
+    const sigArray = [];
+    if (r.stop_hunt && r.stop_hunt.bull_stop_hunt) sigArray.push('<span class="green" title="Stop Hunt">SH</span>');
+    if (r.fvg && r.fvg.in_bullish_fvg) sigArray.push('<span class="green" title="Fair Value Gap">FVG</span>');
+    if (r.ob && r.ob.in_bull_ob) sigArray.push('<span class="green" title="Order Block">OB</span>');
+    if (r.ote && r.ote.in_ote) sigArray.push('<span class="amber" title="Optimal Trade Entry">OTE</span>');
+    if (r.mtf_bull) sigArray.push('<span class="cyan" title="Multi-Timeframe Confluence">MTF</span>');
+    const signals = sigArray.join(' ');
 
-    // 新模組欄位渲染
-      const oC = (r.ofi?.signal||'').includes('Buy')?'green':(r.ofi?.signal||'').includes('Sell')?'red':'dim';
-      const oT = r.ofi ? `<span class="${oC}" title="${(r.ofi.advice||'').replace(/"/g,"'")}">${r.ofi.signal||'─'} Z:${r.ofi.zScore??'-'}</span>` : '<span class="dim">─</span>';
-      const mC = r.mlm?.signal==='Strong Uptrend'||r.mlm?.signal==='Uptrend'?'green':r.mlm?.signal==='Downtrend'?'red':'dim';
-      const mT = r.mlm ? `<span class="${mC}" title="${(r.mlm.advice||'').replace(/"/g,"'")}">${(r.mlm.signal||'─').replace(' ','')}<small> ${r.mlm.percentile??'─'}%</small></span>` : '<span class="dim">─</span>';
-      const vC = r.vr?.regime==='High Vol'?'amber':r.vr?.regime==='Low Vol'?'cyan':'dim';
-      const vT = r.vr ? `<span class="${vC}" title="${(r.vr.advice||'').replace(/"/g,"'")}">${r.vr.regime||'─'}</span>` : '<span class="dim">─</span>';
-      const cC = (r.cp?.score||0)>0?'green':(r.cp?.score||0)<0?'red':'dim';
-      const cT = r.cp?.patterns?.length ? `<span class="${cC}" title="${(r.cp.advice||'').replace(/"/g,"'")}">${r.cp.patterns[0].slice(0,8)}</span>` : '<span class="dim">─</span>';
-      tr.innerHTML = `
+    const oSignal = (r.ofi && r.ofi.signal) ? r.ofi.signal : '─';
+    const oC = oSignal.indexOf('Buy') > -1 ? 'green' : (oSignal.indexOf('Sell') > -1 ? 'red' : 'dim');
+    const oZScore = (r.ofi && r.ofi.zScore !== undefined && r.ofi.zScore !== null) ? r.ofi.zScore : '-';
+    const oAdvice = (r.ofi && r.ofi.advice) ? r.ofi.advice.replace(/"/g, "'") : '';
+    const oT = r.ofi ? `<span class="${oC}" title="${oAdvice}">${oSignal} Z:${oZScore}</span>` : '<span class="dim">─</span>';
+
+    const mSignal = (r.mlm && r.mlm.signal) ? r.mlm.signal : '─';
+    const mPercentile = (r.mlm && r.mlm.percentile !== undefined) ? r.mlm.percentile : '─';
+    const mAdvice = (r.mlm && r.mlm.advice) ? r.mlm.advice.replace(/"/g, "'") : '';
+    const mC = (mSignal === 'Strong Uptrend' || mSignal === 'Uptrend') ? 'green' : (mSignal === 'Downtrend' ? 'red' : 'dim');
+    const mT = r.mlm ? `<span class="${mC}" title="${mAdvice}">${mSignal.replace(' ', '')}<small> ${mPercentile}%</small></span>` : '<span class="dim">─</span>';
+
+    const vRegime = (r.vr && r.vr.regime) ? r.vr.regime : '─';
+    const vAdvice = (r.vr && r.vr.advice) ? r.vr.advice.replace(/"/g, "'") : '';
+    const vC = vRegime === 'High Vol' ? 'amber' : (vRegime === 'Low Vol' ? 'cyan' : 'dim');
+    const vT = r.vr ? `<span class="${vC}" title="${vAdvice}">${vRegime}</span>` : '<span class="dim">─</span>';
+
+    const cScore = (r.cp && r.cp.score) ? r.cp.score : 0;
+    const cPatterns = (r.cp && r.cp.patterns && r.cp.patterns.length > 0) ? r.cp.patterns[0].slice(0, 8) : '─';
+    const cAdvice = (r.cp && r.cp.advice) ? r.cp.advice.replace(/"/g, "'") : '';
+    const cC = cScore > 0 ? 'green' : (cScore < 0 ? 'red' : 'dim');
+    const cT = (r.cp && r.cp.patterns && r.cp.patterns.length > 0) ? `<span class="${cC}" title="${cAdvice}">${cPatterns}</span>` : '<span class="dim">─</span>';
+
+    tr.innerHTML = `
       <td class="mono bold">${r.ticker}</td>
       <td class="dim">${r.source_etf}</td>
-      <td class="mono">${r.price ?? '-'}</td>
+      <td class="mono">${r.price !== null ? r.price : '-'}</td>
       <td>${change}</td>
       <td class="score-cell ${r.score >= 80 ? 'score-high' : r.score >= 60 ? 'score-mid' : ''}">${r.score}</td>
       <td class="${actionClass}">${r.action_zh}</td>
       <td class="dim">${r.grade}</td>
       <td>${struct} ${r.structure}</td>
-      <td class="mono dim">${r.rsi ?? '-'}</td>
-      <td class="mono dim">${r.vol_ratio ?? '-'}</td>
-      <td class="zone-${(r.zone||'').toLowerCase()}">${r.zone ?? '-'}</td>
+      <td class="mono dim">${r.rsi !== null ? r.rsi : '-'}</td>
+      <td class="mono dim">${r.vol_ratio !== null ? r.vol_ratio : '-'}</td>
+      <td class="zone-${(r.zone||'').toLowerCase()}">${r.zone !== null ? r.zone : '-'}</td>
       <td class="signals-cell">${signals || '<span class="dim">─</span>'}</td>
       <td>${oT}</td>
       <td>${mT}</td>
       <td>${vT}</td>
       <td>${cT}</td>
-      <td class="mono dim">${r.atr_stop ?? r.stop_loss ?? '-'}</td>
+      <td class="mono dim">${r.atr_stop !== undefined ? r.atr_stop : (r.stop_loss !== null ? r.stop_loss : '-')}</td>
     `;
     tbody.appendChild(tr);
   }
 }
 
-// ── Export CSV ───────────────────────────────────────────────────────────────
 $('btn-export').addEventListener('click', () => {
   if (!State.r2Results.length) return;
-  exportCSV(State.r2Results.filter(r => r.success), 'MJ_Sniper_v9_R2');
-  exportCSV([...State.r1Results.passed, ...State.r1Results.failed], 'MJ_Sniper_v9_R1');
+  const successRows = [];
+  for(let i=0; i<State.r2Results.length; i++) {
+      if(State.r2Results[i].success) successRows.push(State.r2Results[i]);
+  }
+  exportCSV(successRows, 'MJ_Sniper_v9_R2');
+  exportCSV(State.r1Results.passed.concat(State.r1Results.failed), 'MJ_Sniper_v9_R1');
 });
 
 function exportCSV(rows, filename) {
-  if (!rows.length) return;
+  if (!rows || !rows.length) return;
   const keys = Object.keys(rows[0]).filter(k => typeof rows[0][k] !== 'object');
   const header = keys.join(',');
-  const body = rows.map(r => keys.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const bodyArr = [];
+  for(let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const rowVals = [];
+      for(let j = 0; j < keys.length; j++) {
+          const k = keys[j];
+          let val = r[k];
+          if(val === undefined || val === null) val = '';
+          rowVals.push('"' + String(val).replace(/"/g, '""') + '"');
+      }
+      bodyArr.push(rowVals.join(','));
+  }
+  const body = bodyArr.join('\n');
   const blob = new Blob(['\uFEFF' + header + '\n' + body], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${filename}_${new Date().toISOString().slice(0,16).replace(/[T:]/g,'-')}.csv`;
+  
+  const d = new Date();
+  const pad = n => n < 10 ? '0'+n : n;
+  const ts = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'-'+pad(d.getHours())+'-'+pad(d.getMinutes());
+  
+  a.download = `${filename}_${ts}.csv`;
   a.click();
 }
 
-// ── Table sorting ─────────────────────────────────────────────────────────────
 function makeSortable(tableId) {
   const table = document.getElementById(tableId);
   if (!table) return;
-  table.querySelectorAll('th[data-sort]').forEach(th => {
+  const ths = table.querySelectorAll('th[data-sort]');
+  for (let i = 0; i < ths.length; i++) {
+    const th = ths[i];
     let asc = true;
     th.style.cursor = 'pointer';
     th.addEventListener('click', () => {
-      const col = parseInt(th.dataset.sort);
+      const col = parseInt(th.getAttribute('data-sort'));
       const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
       rows.sort((a, b) => {
-        const va = a.cells[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
-        const vb = b.cells[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
+        const cellA = a.cells[col] ? a.cells[col].textContent : '';
+        const cellB = b.cells[col] ? b.cells[col].textContent : '';
+        const va = cellA.replace(/[^0-9.\-]/g, '');
+        const vb = cellB.replace(/[^0-9.\-]/g, '');
         const na = parseFloat(va), nb = parseFloat(vb);
         if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
-        return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+        return asc ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
       });
-      rows.forEach(r => tbody.appendChild(r));
+      for(let j=0; j<rows.length; j++) {
+          tbody.appendChild(rows[j]);
+      }
       asc = !asc;
     });
+  }
+}
+
+const tabBtns = document.querySelectorAll('.tab-btn');
+for(let i = 0; i < tabBtns.length; i++) {
+  const btn = tabBtns[i];
+  btn.addEventListener('click', () => {
+    for(let j = 0; j < tabBtns.length; j++) tabBtns[j].classList.remove('active');
+    const panels = document.querySelectorAll('.tab-panel');
+    for(let j = 0; j < panels.length; j++) panels[j].classList.remove('active');
+    btn.classList.add('active');
+    $(btn.getAttribute('data-tab')).classList.add('active');
   });
 }
 
-// ── Tab switching ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    $(btn.dataset.tab).classList.add('active');
-  });
-});
-
-// ── Config panel toggle ───────────────────────────────────────────────────────
 $('btn-config').addEventListener('click', () => {
   const panel = $('config-panel');
-  panel.classList.toggle('open');
-  $('btn-config').textContent = panel.classList.contains('open') ? '⚙ 收合設定' : '⚙ 顯示設定';
+  if(panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      $('btn-config').textContent = '⚙ 顯示設定';
+  } else {
+      panel.classList.add('open');
+      $('btn-config').textContent = '⚙ 收合設定';
+  }
 });
 
-// ── Init ─────────────────────────────────────────────────────────────────────
 updateKillZone();
 makeSortable('r1-table');
 makeSortable('r2-table');
 log('MJ Sniper v9.0 · ICT/SMC Elite Trading System 就緒', 'header');
 log('按下 ▶ 執行掃描 開始分析', 'info');
 
-
-// ── Summary cards patch ────────────────────────────────────────────────────
 document.addEventListener('r2-complete', (e) => {
   const r2 = e.detail || [];
-  const $ = id => document.getElementById(id);
-  $('sum-buy').textContent   = r2.filter(r=>r.action==='BUY').length;
-  $('sum-watch').textContent = r2.filter(r=>r.action==='WATCH').length;
-  $('sum-sell').textContent  = r2.filter(r=>r.action==='SELL').length;
-  $('sum-skip').textContent  = r2.filter(r=>r.action==='SKIP').length;
-  $('sum-etf').textContent   = (window.State?.topEtfs||[]).length;
-  $('sum-stocks').textContent= r2.filter(r=>r.success).length;
-  $('r2-count').textContent  = r2.filter(r=>r.success).length + ' 檔';
+  
+  let buyCount = 0;
+  let watchCount = 0;
+  let sellCount = 0;
+  let skipCount = 0;
+  let successCount = 0;
+  
+  for(let i=0; i<r2.length; i++) {
+      if(r2[i].action === 'BUY') buyCount++;
+      if(r2[i].action === 'WATCH') watchCount++;
+      if(r2[i].action === 'SELL') sellCount++;
+      if(r2[i].action === 'SKIP') skipCount++;
+      if(r2[i].success) successCount++;
+  }
+
+  $('sum-buy').textContent   = buyCount;
+  $('sum-watch').textContent = watchCount;
+  $('sum-sell').textContent  = sellCount;
+  $('sum-skip').textContent  = skipCount;
+  $('sum-etf').textContent   = (window.State && window.State.topEtfs) ? window.State.topEtfs.length : 0;
+  $('sum-stocks').textContent= successCount;
+  $('r2-count').textContent  = successCount + ' 檔';
   $('summary-row').style.display = 'grid';
 });
 </script>

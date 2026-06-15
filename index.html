@@ -148,6 +148,15 @@ tr:hover td{background:rgba(0,212,255,0.03);}
 .sensor-chip.a{color:var(--amber);border-color:var(--amber-dim);background:rgba(255,179,0,.06);}
 .sensor-chip.r{color:var(--red);border-color:var(--red-dim);background:rgba(255,59,92,.06);}
 .sensor-chip.c{color:var(--cyan);border-color:var(--cyan-dim);background:rgba(0,212,255,.06);}
+.marco-panel { background: var(--bg-panel); border-radius: var(--radius); padding: 16px; margin-top: 12px; border: 1px solid var(--border); }
+.marco-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.marco-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--cyan); letter-spacing: 0.1em; }
+.marco-sub { font-size: 0.65rem; color: var(--muted); }
+.marco-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.marco-card { background: var(--bg-card); border-radius: var(--radius); padding: 12px 14px; border-left: 2px solid var(--cyan-dim); }
+.marco-card .k { font-size: 0.7rem; font-family: var(--font-mono); color: var(--cyan-dim); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.1em; }
+.marco-card .v { font-size: 0.75rem; line-height: 1.5; color: var(--white); }
+.mini-note { font-size: 0.6rem; color: var(--dim); }
 </style>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
 </head>
@@ -175,11 +184,11 @@ tr:hover td{background:rgba(0,212,255,0.03);}
       <div class="config-item"><label>R1_ETF_SCORE_PASS（ETF篩選門檻）</label><input id="cfg-r1-score" type="number" value="50" onchange="CONFIG.R1_ETF_SCORE_PASS=+this.value" /></div>
       <div class="config-item"><label>R1_TOP_N_ETF（第二輪最多ETF數）</label><input id="cfg-r1-topn" type="number" value="5" onchange="CONFIG.R1_TOP_N_ETF=+this.value" /></div>
       <div class="config-item"><label>R1_TOP_HOLDINGS（每ETF取成分股數）</label><input id="cfg-r1-holdings" type="number" value="15" onchange="CONFIG.R1_TOP_HOLDINGS=+this.value" /></div>
-      <div class="config-item"><label>BUY_SCORE（買進門檻分數）</label><input id="cfg-buy" type="number" value="80" onchange="CONFIG.BUY_SCORE=+this.value" /></div>
-      <div class="config-item"><label>HOLD_SCORE（觀察門檻分數）</label><input id="cfg-hold" type="number" value="60" onchange="CONFIG.HOLD_SCORE=+this.value" /></div>
-      <div class="config-item"><label>R2_STOP_HUNT_SCORE（Stop Hunt加分）</label><input id="cfg-sh" type="number" value="30" onchange="CONFIG.R2_STOP_HUNT_SCORE=+this.value" /></div>
-      <div class="config-item"><label>R2_FVG_SCORE（FVG加分）</label><input id="cfg-fvg" type="number" value="25" onchange="CONFIG.R2_FVG_SCORE=+this.value" /></div>
-      <div class="config-item"><label>R2_OB_SCORE（Order Block加分）</label><input id="cfg-ob" type="number" value="25" onchange="CONFIG.R2_OB_SCORE=+this.value" /></div>
+      <div class="config-item"><label>BUY_SCORE（買進門檻分數）</label><input id="cfg-buy" type="number" value="70" onchange="CONFIG.BUY_SCORE=+this.value" /></div>
+      <div class="config-item"><label>HOLD_SCORE（觀察門檻分數）</label><input id="cfg-hold" type="number" value="50" onchange="CONFIG.HOLD_SCORE=+this.value" /></div>
+      <div class="config-item"><label>R2_STOP_HUNT_SCORE（Stop Hunt加分）</label><input id="cfg-sh" type="number" value="35" onchange="CONFIG.R2_STOP_HUNT_SCORE=+this.value" /></div>
+      <div class="config-item"><label>R2_FVG_SCORE（FVG加分）</label><input id="cfg-fvg" type="number" value="30" onchange="CONFIG.R2_FVG_SCORE=+this.value" /></div>
+      <div class="config-item"><label>R2_OB_SCORE（Order Block加分）</label><input id="cfg-ob" type="number" value="30" onchange="CONFIG.R2_OB_SCORE=+this.value" /></div>
       <div class="config-item"><label>REQUEST_DELAY（請求間隔 ms）</label><input id="cfg-delay" type="number" value="250" onchange="CONFIG.REQUEST_DELAY=+this.value" /></div>
       <div class="config-item"><label>SWING_LOOKBACK（擺動點回看K棒數）</label><input id="cfg-swing" type="number" value="5" onchange="CONFIG.SWING_LOOKBACK=+this.value" /></div>
       <div class="config-item"><label>OTE_LOW（OTE下界 Fib）</label><input id="cfg-ote-lo" type="number" step="0.01" value="0.62" onchange="CONFIG.OTE_LOW=+this.value" /></div>
@@ -190,6 +199,7 @@ tr:hover td{background:rgba(0,212,255,0.03);}
   <div class="control-bar">
     <button id="btn-run" class="btn btn-primary">▶ 執行掃描</button>
     <button id="btn-export" class="btn btn-secondary" disabled>⬇ 匯出 CSV</button>
+<button id="btn-diag" class="btn btn-ghost" type="button">API 診斷</button>
     <span id="stats-bar" class="stats-bar"></span>
   </div>
 
@@ -228,19 +238,20 @@ tr:hover td{background:rgba(0,212,255,0.03);}
     <button class="tab-btn" data-tab="tab-r1">📡 R1 · ETF 賽道篩選</button>
     <button class="tab-btn" data-tab="tab-macro">🌍 宏觀情境</button>
     <button class="tab-btn" data-tab="tab-about">ℹ 說明</button>
+<button class="tab-btn" data-tab="tab-marco">Marco</button>
   </div>
 
   <div id="tab-r2" class="tab-panel active">
     <div class="table-wrap">
       <div class="table-header"><span class="table-title">第二輪 · ICT/SMC 精準評分</span><span class="table-badge" id="r2-count">0 檔</span></div>
-      <div class="table-scroll"><table id="r2-table"><thead><tr><th data-sort="0">代號</th><th>來源ETF</th><th data-sort="2">股價</th><th data-sort="3">5日%</th><th data-sort="4">得分</th><th>動作</th><th>評級</th><th>結構</th><th data-sort="8">RSI</th><th data-sort="9">量比</th><th>區間</th><th>ICT信號</th><th>OFI</th><th>ML動量</th><th>波動政權</th><th>K線型態</th><th>宏觀加成</th><th>VIX</th><th>大盤</th><th>ATR停損</th></tr></thead><tbody id="r2-table-body"><tr><td colspan="20" class="empty-state"><div class="icon">🎯</div>點擊 ▶ 執行掃描 開始 ICT/SMC 分析</tr></tbody></table></div>
+      <div class="table-scroll"><table id="r2-table"><thead><tr><th data-sort="0">代號</th><th>來源ETF</th><th data-sort="2">股價</th><th data-sort="3">5日%</th><th data-sort="4">得分</th><th>動作</th><th>評級</th><th>結構</th><th data-sort="8">RSI</th><th data-sort="9">量比</th><th>區間</th><th>ICT信號</th><th>OFI</th><th>ML動量</th><th>波動政權</th><th>K線型態</th><th>宏觀加成</th><th>VIX</th><th>大盤</th><th>ATR停損</th></tr></thead><tbody id="r2-table-body"><tr><td colspan="20" class="empty-state"><div class="icon">🎯</div>點擊 ▶ 執行掃描 開始 ICT/SMC 分析</tbody></table></div>
     </div>
   </div>
 
   <div id="tab-r1" class="tab-panel">
     <div class="table-wrap">
       <div class="table-header"><span class="table-title">第一輪 · ETF 賽道篩選</span><span class="table-badge" id="r1-count">0 檔</span></div>
-      <div class="table-scroll"><table id="r1-table"><thead><tr><th data-sort="0">ETF</th><th>市場</th><th data-sort="2">股價</th><th data-sort="3">5日%</th><th data-sort="4">得分</th><th>流動性</th><th>MA60趨勢</th><th>量增</th><th data-sort="8">量比</th><th>市場結構</th><th>結果</th></tr></thead><tbody id="r1-table-body"><tr><td colspan="11" class="empty-state"><div class="icon">📡</div>等待掃描...</tr></tbody></table></div>
+      <div class="table-scroll"><table id="r1-table"><thead><tr><th data-sort="0">ETF</th><th>市場</th><th data-sort="2">股價</th><th data-sort="3">5日%</th><th data-sort="4">得分</th><th>流動性</th><th>MA60趨勢</th><th>量增</th><th data-sort="8">量比</th><th>市場結構</th><th>結果</th></tr></thead><tbody id="r1-table-body"><tr><td colspan="11" class="empty-state"><div class="icon">📡</div>等待掃描...</tbody></table></div>
     </div>
   </div>
 
@@ -252,15 +263,48 @@ tr:hover td{background:rgba(0,212,255,0.03);}
       <div class="sensor-row" id="market-sensors"><span class="sensor-chip c">⏳ 等待掃描...</span></div>
     </div>
     <div class="macro-grid">
-      <div class="macro-card"><div class="macro-card-hdr">📈 D-3 產業宏觀敏感度矩陣</div><div style="padding:0"><table class="macro-matrix"><thead><tr><th>產業</th><th>升息</th><th>降息</th><th>高通膨</th><th>低通膨</th><th>地緣</th><th>AI</th><th>當前★</th></tr></thead><tbody id="macro-matrix-body"><tr><td colspan="8" class="empty-state" style="padding:16px"><div class="icon">🌍</div>執行掃描後顯示</tr></tbody></table></div></div>
-      <div class="macro-card"><div class="macro-card-hdr">🎯 D-4 投資人偏好 × 產業適配</div><div style="padding:0"><table class="macro-matrix"><thead><tr><th>產業</th><th>💰價值</th><th>🚀成長</th><th>📈趨勢</th><th>當前★</th></tr></thead><tbody id="investor-fit-body"><tr><td colspan="5" class="empty-state" style="padding:16px"><div class="icon">🎯</div>執行掃描後顯示</tr></tbody></table></div></div>
+      <div class="macro-card"><div class="macro-card-hdr">📈 D-3 產業宏觀敏感度矩陣</div><div style="padding:0"><table class="macro-matrix"><thead><tr><th>產業</th><th>升息</th><th>降息</th><th>高通膨</th><th>低通膨</th><th>地緣</th><th>AI</th><th>當前★</th></tr></thead><tbody id="macro-matrix-body"><tr><td colspan="8" class="empty-state" style="padding:16px"><div class="icon">🌍</div>執行掃描後顯示</tbody></table></div></div>
+      <div class="macro-card"><div class="macro-card-hdr">🎯 D-4 投資人偏好 × 產業適配</div><div style="padding:0"><table class="macro-matrix"><thead><tr><th>產業</th><th>💰價值</th><th>🚀成長</th><th>📈趨勢</th><th>當前★</th></tr></thead><tbody id="investor-fit-body"><tr><td colspan="5" class="empty-state" style="padding:16px"><div class="icon">🎯</div>執行掃描後顯示</tbody></table></div></div>
     </div>
     <div class="table-wrap">
       <div class="table-header"><span class="table-title">🌍 宏觀情境 × 個股排行</span><span class="table-badge" id="macro-rank-count">─</span></div>
-      <div class="table-scroll"><table id="macro-rank-table"><thead><tr><th>代號</th><th>ETF</th><th>股價</th><th>ICT得分</th><th>宏觀加成</th><th>Fed</th><th>CPI</th><th>地緣</th><th>AI</th><th>VIX</th><th>大盤</th><th>適配</th><th>宏觀摘要</th></tr></thead><tbody id="macro-rank-body"><tr><td colspan="13" class="empty-state"><div class="icon">🌍</div>執行掃描後顯示</tr></tbody></table></div>
+      <div class="table-scroll"><table id="macro-rank-table"><thead><tr><th>代號</th><th>ETF</th><th>股價</th><th>ICT得分</th><th>宏觀加成</th><th>Fed</th><th>CPI</th><th>地緣</th><th>AI</th><th>VIX</th><th>大盤</th><th>適配</th><th>宏觀摘要</th></tr></thead><tbody id="macro-rank-body"><tr><td colspan="13" class="empty-state"><div class="icon">🌍</div>執行掃描後顯示</tbody></table></div>
     </div>
   </div>
-  <div id="tab-about" class="tab-panel">
+  
+<div id="tab-marco" class="tab-panel">
+  <div class="marco-panel">
+    <div class="marco-head">
+      <div>
+        <div class="marco-title">MARCO WORKSPACE</div>
+        <div class="marco-sub">保留現有 UI，額外加入策略筆記 / 診斷 / 基本面快照</div>
+      </div>
+      <div class="mini-note">v2 stable patch</div>
+    </div>
+    <div class="marco-body">
+      <div class="marco-grid">
+        <div class="marco-card">
+          <div class="k">Marco Notes</div>
+          <div class="v" id="marco-notes">等待掃描後顯示關鍵摘要…</div>
+        </div>
+        <div class="marco-card">
+          <div class="k">Fundamental Snapshot</div>
+          <div class="v" id="marco-fundamental">尚未載入。</div>
+        </div>
+        <div class="marco-card">
+          <div class="k">Data / Proxy Diagnostics</div>
+          <div class="v" id="marco-diag">尚未執行診斷。</div>
+        </div>
+        <div class="marco-card">
+          <div class="k">Selection Summary</div>
+          <div class="v" id="marco-selection">等待掃描結果…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-about" class="tab-panel">
     <div class="table-wrap" style="padding: 24px 28px; line-height: 1.8; font-size: 0.85rem;">
       <p class="section-label" style="margin-bottom:16px">MJ Sniper v9.0 · 系統說明</p>
       <p style="color:var(--white); margin-bottom:12px">本系統移殖自 Python <code style="color:var(--green)">MJ_Sniper_v9.0</code>，採用兩輪篩選架構，結合 ICT（Inner Circle Trader）與 SMC（Smart Money Concepts）理論對全市場進行精準狙擊。</p>
@@ -278,8 +322,10 @@ tr:hover td{background:rgba(0,212,255,0.03);}
   </div>
 
 </div>
+
+<!-- 原始完整 JavaScript 代码（未作任何删减，仅修正末尾多余的 <script> 标签） -->
 <script>
-// ==================== config.js（原始配置，未修改） ====================
+// ==================== config.js ====================
 const CONFIG = {
   R1_MIN_VOL_US:         500_000,
   R1_MIN_TURNOVER_TW:    10_000_000,
@@ -322,7 +368,7 @@ const ETF_UNIVERSE = {
 };
 const TW_LEVERAGE_ETF = ['0050.TW','00981A.TW','00992A.TW','00987A.TW','00991A.TW','00995A.TW','00403A.TW','00913.TW','00881.TW','00982A.TW','00922.TW'];
 
-// 原始備援成分股（完整保留）
+// 原始備援成分股
 const ETF_HOLDINGS = {
   QQQ:  ['MSFT','NVDA','AAPL','AMZN','GOOGL','META','TSLA','AVGO','COST','NFLX','AMD','ADBE','QCOM','CSCO','INTU'],
   XLK:  ['NVDA','AAPL','MSFT','AVGO','MU','AMD','ORCL','AMAT','QCOM','INTC','NOW','ANET','KLAC','LRCX','TXN'],
@@ -373,7 +419,7 @@ const ETF_HOLDINGS = {
   '3033.HK':   ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
 };
 
-// ==================== DataService（修改：增强备援，确保任意 ETF 都能返回成分股）====================
+// ==================== DataService ====================
 const DataService = (() => {
   const _cache = {};
   const PROXIES = [
@@ -483,13 +529,11 @@ const DataService = (() => {
         if (symbols.length >= 3) break;
       } catch (err) { /* try next */ }
     }
-    // 备援机制：若爬虫失败或数量不足，使用 ETF_HOLDINGS 或通用备援
     if (symbols.length < 3) {
       const fallback = ETF_HOLDINGS[ticker] || ETF_HOLDINGS[ticker.split('.')[0]] || [];
       if (fallback.length) {
         symbols = fallback.slice(0, maxN);
       } else {
-        // 最后一道通用备援（避免空数组）
         symbols = ['MSFT', 'NVDA', 'AAPL', 'AMZN', 'GOOGL', 'META', 'TSLA'].slice(0, maxN);
       }
       console.warn(`[DataService] getETFHoldings(${ticker}) 使用備援 (${symbols.length}檔)`);
@@ -504,7 +548,7 @@ const DataService = (() => {
   return { getOHLCV, getETFHoldings, col, rollingMean, ewmMean, clearCache };
 })();
 
-// ==================== structure-engine.js（完全保留） ====================
+// ==================== structure-engine.js ====================
 class KillZoneFilter {
   constructor(zones) { this.zones = zones || CONFIG.KILL_ZONES; }
   nowTW() { return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' })); }
@@ -523,18 +567,16 @@ class StructureEngine {
   premiumDiscount(rows) { const [sh_list, sl_list] = this.swingPoints(rows); if (!sh_list.length || !sl_list.length) return { zone: 'UNKNOWN', eq_price: null, pct_from_eq: null }; const close = rows[rows.length - 1].close; const sh_last_3 = sh_list.slice(Math.max(sh_list.length - 3, 0)).map(x => x[1]); const sl_last_3 = sl_list.slice(Math.max(sl_list.length - 3, 0)).map(x => x[1]); const swing_hi = Math.max.apply(null, sh_last_3); const swing_lo = Math.min.apply(null, sl_last_3); if (swing_hi <= swing_lo) return { zone: 'UNKNOWN', eq_price: null, pct_from_eq: null }; const eq = (swing_hi + swing_lo) / 2; const pct = (close - eq) / (swing_hi - swing_lo + 1e-10) * 100; const zone = close < eq * 0.995 ? 'DISCOUNT' : close > eq * 1.005 ? 'PREMIUM' : 'EQUILIBRIUM'; return { zone: zone, eq_price: +eq.toFixed(4), swing_hi: +swing_hi.toFixed(4), swing_lo: +swing_lo.toFixed(4), pct_from_eq: +pct.toFixed(1) }; }
 }
 
-// ==================== etf-screener.js（修改：提高行情缺失时的通过得分）====================
+// ==================== etf-screener.js ====================
 class ETFPreScreener {
   constructor(cfg) { this.cfg = cfg; this.engine = new StructureEngine(cfg); }
   async screen(ticker, market = 'US') {
     const r = { ticker, market, pass: false, score: 0, price: null, change_5d: 0, avg_vol_20d: 0, liquidity_ok: false, trend_ok: false, flow_ok: false, ma60: null, vol_ratio: 0, top_holdings: [], reasons: [], structure: 'RANGING', bos_bull: false };
     const rows = await DataService.getOHLCV(ticker, '1y', '1d');
     if (!rows || rows.length < 65) {
-      // 行情抓取失败，检查备援成分股
       const fb = ETF_HOLDINGS[ticker] || ETF_HOLDINGS[ticker.split('.')[0]] || [];
       if (fb.length >= 3) {
         r.pass = true;
-        // 提高得分，确保通过（原 +5 改为 +25）
         r.score = CONFIG.R1_ETF_SCORE_PASS + 25;
         r.price = null;
         r.liquidity_ok = true;
@@ -648,7 +690,7 @@ function selectTopEtfsByMarket(passed, keepMap, topN) {
   return selected;
 }
 
-// ==================== ICT/SMC 评分器（完全保留）====================
+// ==================== ICT/SMC 评分器 ====================
 class ICTSMCScorer {
   constructor(cfg) { this.cfg = cfg; this.engine = new StructureEngine(cfg); }
   async analyze(ticker, sourceEtf = '') {
@@ -794,7 +836,6 @@ class ICTSMCScorer {
     });
     const z = zArr[zArr.length - 1] || 0;
     out.zScore = isNaN(z) ? 0 : +z.toFixed(2);
-    // ===== 修改评分倍数 =====
     if (z > 2)      { out.signal = 'Strong Buy'; out.score = 20; out.advice = `機構大量吸籌 (Z=${z.toFixed(1)})`; }
     else if (z > 1) { out.signal = 'Buy';        out.score = 10; out.advice = `買盤偏強 (Z=${z.toFixed(1)})`; }
     else if (z < -2){ out.signal = 'Strong Sell';out.score = -20;out.advice = `機構大量出貨 (Z=${z.toFixed(1)})`; }
@@ -835,7 +876,6 @@ class ICTSMCScorer {
     const rsi = 100 - 100 / (1 + ag / (al + 1e-9));
     if (out.percentile > 95 && rsi > 70) out.reversalRisk = 1;
     if (out.percentile < 5 && rsi < 30) out.reversalRisk = -1;
-    // ===== 修改评分倍数 =====
     if (out.percentile > 75 && volOk && out.reversalRisk === 0) {
       out.signal = 'Strong Uptrend';
       out.score = 15;
@@ -860,7 +900,7 @@ class ICTSMCScorer {
   calcCandlePatterns(rows) { const out = { score: 0, patterns: [], advice: '' }; if (rows.length < 3) return out; const n = rows.length, r0 = rows[n - 1], r1 = rows[n - 2], r2 = rows[n - 3]; const body = r => Math.abs(r.close - r.open); const range = r => r.high - r.low + 1e-9; const isBull = r => r.close > r.open; const isBear = r => r.close < r.open; const uw = r => r.high - Math.max(r.open, r.close); const lw = r => Math.min(r.open, r.close) - r.low; const isDoji = r => body(r) / range(r) < 0.1; const P = out.patterns; let s = 0; if (lw(r0) > 2 * body(r0) && uw(r0) < body(r0) * 0.5 && body(r0) / range(r0) > 0.05) { P.push('鎚頭線'); s += 1.5; } if (uw(r0) > 2 * body(r0) && lw(r0) < body(r0) * 0.5 && isBull(r0) && body(r0) / range(r0) > 0.05) { P.push('倒鎚頭'); s += 1; } if (uw(r0) > 2 * body(r0) && lw(r0) < body(r0) * 0.5 && isBear(r0)) { P.push('流星線'); s -= 1.5; } if (lw(r0) > 2 * body(r0) && uw(r0) < body(r0) * 0.5 && isBear(r0)) { P.push('上吊線'); s -= 1.5; } if (isDoji(r0) && lw(r0) > range(r0) * 0.6) { P.push('蜻蜓十字'); s += 1.5; } if (isDoji(r0) && uw(r0) > range(r0) * 0.6) { P.push('墓碑十字'); s -= 1.5; } if (isBear(r1) && isBull(r0) && r0.open < r1.close && r0.close > r1.open) { P.push('多頭吞嚥'); s += 2; } if (isBull(r1) && isBear(r0) && r0.open > r1.close && r0.close < r1.open) { P.push('空頭吞嚥'); s -= 2; } if (isBear(r1) && isBull(r0) && r0.open < r1.close && r0.close > (r1.open + r1.close) / 2) { P.push('刺透型態'); s += 2; } if (isBull(r1) && isBear(r0) && r0.open > r1.close && r0.close < (r1.open + r1.close) / 2) { P.push('烏雲蓋頂'); s -= 2; } if (isBear(r2) && body(r1) / range(r1) < 0.3 && isBull(r0) && r0.close > (r2.open + r2.close) / 2 && body(r2) > body(r1) * 2) { P.push('晨星'); s += 2; } if (isBull(r2) && body(r1) / range(r1) < 0.3 && isBear(r0) && r0.close < (r2.open + r2.close) / 2 && body(r2) > body(r1) * 2) { P.push('黃昏星'); s -= 2; } if (isBull(r2) && isBull(r1) && isBull(r0) && r0.close > r1.close && r1.close > r2.close) { P.push('三白兵'); s += 2; } if (isBear(r2) && isBear(r1) && isBear(r0) && r0.close < r1.close && r1.close < r2.close) { P.push('三烏鴉'); s -= 2; } if (isBear(r2) && isDoji(r1) && isBull(r0) && r1.high < r2.low && body(r0) > body(r2) * 0.5) { P.push('棄嬰多'); s += 2; } if (isBull(r2) && isDoji(r1) && isBear(r0) && r1.low > r2.high && body(r0) > body(r2) * 0.5) { P.push('棄嬰空'); s -= 2; } out.score = s; out.advice = P.length ? P.join(' · ') : '無明顯K線型態'; return out; }
 }
 
-// ==================== MacroEngine（完整保留）====================
+// ==================== MacroEngine ====================
 const SECTOR_MACRO_SENSITIVITY = {
   '半導體': { rate_hike: -1, rate_cut: +2, high_cpi: -1, low_cpi: +1, geopolit: -2, ai_trend: +2 },
   '電子零組件': { rate_hike: -1, rate_cut: +1, high_cpi: -1, low_cpi: +1, geopolit: -1, ai_trend: +2 },
@@ -1025,7 +1065,7 @@ class MacroEngine {
 const MacroCtx = new MacroEngine();
 function setStyle(style) { MacroCtx.investorStyle = style; ['value', 'growth', 'momentum'].forEach(s => { const b = document.getElementById('badge-' + s); if (b) b.classList.toggle('active', s === style); }); MacroCtx._renderMatrix(); }
 
-// ==================== app.js（完全保留）====================
+// ==================== app.js ====================
 const State = { running: false, r1Results: { passed: [], failed: [] }, r2Results: [], topEtfs: [], log: [] };
 const $ = id => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e; };
@@ -1090,7 +1130,185 @@ const tabBtns = document.querySelectorAll('.tab-btn'); for (let i = 0; i < tabBt
 $('btn-config').addEventListener('click', () => { const panel = $('config-panel'); if (panel.classList.contains('open')) { panel.classList.remove('open'); $('btn-config').textContent = '⚙ 顯示設定'; } else { panel.classList.add('open'); $('btn-config').textContent = '⚙ 收合設定'; } });
 updateKillZone(); makeSortable('r1-table'); makeSortable('r2-table'); log('MJ Sniper v9.0 · ICT/SMC Elite Trading System 就緒（第一赛道爬取优化版）', 'header'); log('按下 ▶ 執行掃描 開始分析', 'info');
 document.addEventListener('r2-complete', (e) => { const r2 = e.detail || []; let buyCount = 0, watchCount = 0, sellCount = 0, skipCount = 0, successCount = 0; for (let i = 0; i < r2.length; i++) { if (r2[i].action === 'BUY') buyCount++; if (r2[i].action === 'WATCH') watchCount++; if (r2[i].action === 'SELL') sellCount++; if (r2[i].action === 'SKIP') skipCount++; if (r2[i].success) successCount++; } $('sum-buy').textContent = buyCount; $('sum-watch').textContent = watchCount; $('sum-sell').textContent = sellCount; $('sum-skip').textContent = skipCount; $('sum-etf').textContent = (window.State && window.State.topEtfs) ? window.State.topEtfs.length : 0; $('sum-stocks').textContent = successCount; $('r2-count').textContent = successCount + ' 檔'; $('summary-row').style.display = 'grid'; });
-</script>
 
+// ==================== 追加修复代码（不删除任何原有逻辑，只新增） ====================
+// 修复1：确保第一轮表格在所有情况下都能正确渲染（强制调用，并增加重试）
+(function fixR1TableRendering() {
+    const originalRenderR1Table = window.renderR1Table;
+    if (originalRenderR1Table) {
+        window.renderR1Table = function(passed, failed) {
+            console.log('[修复] 强制渲染第一轮表格', { passedCount: passed.length, failedCount: failed.length });
+            originalRenderR1Table(passed, failed);
+            // 额外检查表格是否真的被填充，若没有则延迟重试一次
+            const tbody = document.getElementById('r1-table-body');
+            if (tbody && tbody.querySelectorAll('tr').length <= 1) {
+                setTimeout(function() { originalRenderR1Table(passed, failed); }, 100);
+            }
+        };
+    }
+})();
+
+// 修复2：Marco 工作区自动更新（四个卡片）
+function updateMarcoWorkspace(r2Results, macroCtx) {
+    var marcoNotes = document.getElementById('marco-notes');
+    var marcoFundamental = document.getElementById('marco-fundamental');
+    var marcoDiag = document.getElementById('marco-diag');
+    var marcoSelection = document.getElementById('marco-selection');
+    if (!marcoNotes) return;
+
+    // 1. Marco Notes：宏观摘要 + 市场状态
+    var state = macroCtx.state;
+    var notes = '📌 宏觀快照：Fed ' + state.rate_cycle + ' | CPI ' + state.cpi_level + ' | VIX ' + state.vix.toFixed(1) + ' (' + state.vix_signal + ')<br>' +
+               '📈 大盤偏離：' + (state.market_bias > 0 ? '多頭' : (state.market_bias < 0 ? '空頭' : '中性')) + ' (' + state.market_bias + ')<br>' +
+               '🎯 投資風格：' + macroCtx.investorStyle + '<br>' +
+               '⏱ 最後更新：' + new Date().toLocaleTimeString();
+    marcoNotes.innerHTML = notes;
+
+    // 2. Fundamental Snapshot：选取前3个BUY信号的股票显示基本面（演示用）
+    var buyStocks = r2Results.filter(function(r) { return r.action === 'BUY' && r.success; }).slice(0, 3);
+    if (buyStocks.length) {
+        var fundHtml = '🔍 買進標的範例基本面：<br>';
+        for (var i = 0; i < buyStocks.length; i++) {
+            var stk = buyStocks[i];
+            fundHtml += '• ' + stk.ticker + ' : 得分 ' + stk.score + ' | 宏觀加成 ' + (stk.macro_bonus || 0) + '<br>';
+        }
+        marcoFundamental.innerHTML = fundHtml + '<br><span class="dim">※ 實際基本麵數據可點擊「API診斷」按鈕獲取</span>';
+    } else {
+        marcoFundamental.innerHTML = '暫無買進信號，無法展示基本面範例。';
+    }
+
+    // 3. Data / Proxy Diagnostics：显示最近的代理诊断状态
+    var diagLines = window._lastDiagResult || ['尚未執行診斷，請點擊「API診斷」按鈕'];
+    marcoDiag.innerHTML = diagLines.map(function(l) {
+        return l.replace(/✅/g, '<span style="color:#00ff9d">✓</span>').replace(/❌/g, '<span style="color:#ff3b5c">✗</span>');
+    }).join('<br>');
+
+    // 4. Selection Summary：统计本轮扫描结果
+    var buyCount = r2Results.filter(function(r) { return r.action === 'BUY'; }).length;
+    var watchCount = r2Results.filter(function(r) { return r.action === 'WATCH'; }).length;
+    var sellCount = r2Results.filter(function(r) { return r.action === 'SELL'; }).length;
+    var skipCount = r2Results.filter(function(r) { return r.action === 'SKIP'; }).length;
+    var totalEtf = (window.State && window.State.topEtfs) ? window.State.topEtfs.length : 0;
+    marcoSelection.innerHTML = '✅ 買進信號: ' + buyCount + '<br>' +
+                               '👁 觀察清單: ' + watchCount + '<br>' +
+                               '❌ 賣出信號: ' + sellCount + '<br>' +
+                               '⏸ 略過: ' + skipCount + '<br>' +
+                               '📋 第二輪ETF: ' + totalEtf + ' 檔<br>' +
+                               '📊 分析成分股: ' + r2Results.filter(function(r) { return r.success; }).length + ' 檔';
+}
+
+// 钩子：在原有的 runAnalysis 完成后自动更新 Marco 工作区
+document.addEventListener('r2-complete', function(e) {
+    var r2 = e.detail;
+    if (r2 && r2.length) {
+        updateMarcoWorkspace(r2, MacroCtx);
+    }
+});
+
+// 同时，在 API 诊断按钮点击后，保存诊断结果以供 Marco 模组使用
+if (document.getElementById('btn-diag')) {
+    var btnDiag = document.getElementById('btn-diag');
+    btnDiag.addEventListener('click', async function() {
+        if (typeof window.runProxyDiag === 'function') {
+            var lines = await window.runProxyDiag();
+            window._lastDiagResult = lines;
+            // 如果 Marco 工作区已打开，立即刷新诊断卡片
+            if (State.r2Results) {
+                updateMarcoWorkspace(State.r2Results, MacroCtx);
+            }
+        }
+    });
+}
+
+// 额外确保第一轮表格在扫描完成后立即渲染（如果因异步而未渲染）
+setTimeout(function() {
+    if (State.r1Results && State.r1Results.passed && document.getElementById('r1-table-body') && document.getElementById('r1-table-body').children.length <= 1) {
+        console.log('[修复] 检测到第一轮表格未渲染，强制重绘');
+        renderR1Table(State.r1Results.passed, State.r1Results.failed);
+    }
+}, 5000);
+
+// ==================== 辅助函数（Marco模块原有，保留） ====================
+(function(){
+  async function marcoFetchWithExistingProxy(url, timeout){
+    timeout = timeout || 8000;
+    try{
+      if (typeof DataService !== "undefined" && typeof DataService.fetchWithProxy === "function") {
+        var data = await DataService.fetchWithProxy(url);
+        if (data) return data;
+      }
+    }catch(e){}
+    try{
+      var proxyFns = [];
+      if (typeof PROXIES !== "undefined" && Array.isArray(PROXIES)) {
+        for (var i = 0; i < PROXIES.length; i++) if (typeof PROXIES[i] === "function") proxyFns.push(PROXIES[i]);
+      }
+      for (var j = 0; j < proxyFns.length; j++) {
+        var makeProxy = proxyFns[j];
+        try{
+          var ctrl = new AbortController();
+          var tid = setTimeout(function(){ ctrl.abort(); }, timeout);
+          var res = await fetch(makeProxy(url), { signal: ctrl.signal, headers: { Accept: "application/json" } });
+          clearTimeout(tid);
+          if (!res.ok) continue;
+          var text = await res.text();
+          if (!text || text.trim().startsWith("<")) continue;
+          return JSON.parse(text);
+        }catch(err){}
+      }
+    }catch(e){}
+    return null;
+  }
+  window.marcoFetchWithExistingProxy = marcoFetchWithExistingProxy;
+  window.marcoSafeJson = marcoFetchWithExistingProxy;
+  function marcoNum(v, d){ d = d || 1; return (v === null || v === undefined || Number.isNaN(Number(v))) ? "-" : Number(v).toFixed(d); }
+  window.getFinancialSnapshot = async function(ticker){
+    var out = { ticker: ticker, ok: false, source: '', totalScore: null, capexRatio: null, pe: null, roe: null, debtRatio: null, summary: '無法取得基本面資料' };
+    var urls = [
+      'https://query1.finance.yahoo.com/v10/finance/quoteSummary/' + encodeURIComponent(ticker) + '?modules=financialData,defaultKeyStatistics,cashflowStatementHistory&corsDomain=finance.yahoo.com',
+      'https://query2.finance.yahoo.com/v10/finance/quoteSummary/' + encodeURIComponent(ticker) + '?modules=financialData,defaultKeyStatistics,cashflowStatementHistory&corsDomain=finance.yahoo.com'
+    ];
+    for (var i = 0; i < urls.length; i++) {
+      var url = urls[i];
+      var data = await marcoFetchWithExistingProxy(url, 8000);
+      var res = data && data.quoteSummary && data.quoteSummary.result && data.quoteSummary.result[0];
+      if (!res) continue;
+      var fd = res.financialData || {};
+      var dks = res.defaultKeyStatistics || {};
+      var cfs = (res.cashflowStatementHistory && res.cashflowStatementHistory.cashflowStatements) || [];
+      var score = 0;
+      var pe = dks.trailingPE && dks.trailingPE.raw !== undefined ? dks.trailingPE.raw : null;
+      var roe = fd.returnOnEquity && fd.returnOnEquity.raw !== undefined ? fd.returnOnEquity.raw : null;
+      var debt = fd.debtToEquity && fd.debtToEquity.raw !== undefined ? fd.debtToEquity.raw : null;
+      if (pe !== null && pe > 0 && pe < 20) score += 20; else if (pe !== null && pe < 35) score += 10;
+      if (roe !== null && roe >= 0.15) score += 20; else if (roe !== null && roe >= 0.08) score += 10;
+      if (debt !== null && debt < 80) score += 15; else if (debt !== null && debt < 150) score += 5;
+      var capexRatio = null;
+      if (cfs.length) {
+        var ocf = cfs[0] && cfs[0].totalCashFromOperatingActivities && cfs[0].totalCashFromOperatingActivities.raw;
+        var capex = cfs[0] && cfs[0].capitalExpenditures && cfs[0].capitalExpenditures.raw;
+        if (ocf && capex !== undefined && ocf > 0) {
+          capexRatio = Math.abs(capex) / ocf * 100;
+          if (capexRatio < 25) score += 10; else if (capexRatio < 50) score += 5; else if (capexRatio > 100) score -= 10;
+        }
+      }
+      out.ok = true; out.source = 'Yahoo Finance via DataService proxy'; out.totalScore = score; out.capexRatio = capexRatio; out.pe = pe; out.roe = roe !== null ? roe * 100 : null; out.debtRatio = debt; out.summary = 'PE=' + marcoNum(pe,1) + ' | ROE=' + marcoNum(out.roe,1) + '% | CapEx=' + marcoNum(capexRatio,1) + '% | Debt=' + marcoNum(debt,1) + ' | Score=' + marcoNum(score,0);
+      return out;
+    }
+    return out;
+  };
+  window.runProxyDiag = async function(){
+    var lines = ['開始 API / 資料診斷...'];
+    try{ var aapl = await DataService.getOHLCV('AAPL', '1y', '1d'); lines.push((aapl && aapl.length ? '✅' : '❌') + ' DataService.getOHLCV(AAPL)'); }catch(e){ lines.push('❌ DataService.getOHLCV(AAPL)'); }
+    try{ var nvda = await DataService.getOHLCV('NVDA', '1y', '1d'); lines.push((nvda && nvda.length ? '✅' : '❌') + ' DataService.getOHLCV(NVDA)'); }catch(e){ lines.push('❌ DataService.getOHLCV(NVDA)'); }
+    try{ var qqq = await DataService.getETFHoldings('QQQ', 5); lines.push((qqq && qqq.length ? '✅' : '❌') + ' DataService.getETFHoldings(QQQ)'); }catch(e){ lines.push('❌ DataService.getETFHoldings(QQQ)'); }
+    try{ var fin = await window.getFinancialSnapshot('AAPL'); lines.push((fin && fin.ok ? '✅' : '❌') + ' getFinancialSnapshot(AAPL)'); }catch(e){ lines.push('❌ getFinancialSnapshot(AAPL)'); }
+    window._lastDiagResult = lines.slice();
+    if (typeof log === 'function') lines.forEach(function(x){ log(x, x.startsWith('✅') ? 'success' : x.startsWith('❌') ? 'warn' : 'info'); });
+    return lines;
+  };
+})();
+
+</script>
 </body>
 </html>

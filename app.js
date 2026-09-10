@@ -1,6 +1,4 @@
-// app.js — MJ Sniper v9.0 Main Application Controller
-
-// ── State ───────────────────────────────────────────────────────────────────
+// app-2.js — GitHub Pages / mobile optimized replacement
 const State = {
   running: false,
   r1Results: { passed: [], failed: [] },
@@ -9,54 +7,205 @@ const State = {
   log: [],
 };
 
-// ── DOM helpers ─────────────────────────────────────────────────────────────
-const $  = id => document.getElementById(id);
-const el = (tag, cls, html) => {
-  const e = document.createElement(tag);
-  if (cls)  e.className = cls;
-  if (html) e.innerHTML = html;
-  return e;
+const $ = id => document.getElementById(id);
+const el = (tag, cls) => {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  return node;
 };
 
-// ── Logger ───────────────────────────────────────────────────────────────────
+let logPaintQueued = false;
 function log(msg, type = 'info') {
   State.log.push({ msg, type, ts: new Date().toLocaleTimeString() });
-  const div = $('log');
-  const line = el('div', `log-line log-${type}`);
-  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  div.appendChild(line);
-  div.scrollTop = div.scrollHeight;
+  if (State.log.length > 250) State.log.shift();
+  if (logPaintQueued) return;
+  logPaintQueued = true;
+  requestAnimationFrame(() => {
+    logPaintQueued = false;
+    const div = $('log');
+    if (!div) return;
+    const start = Math.max(0, State.log.length - 80);
+    const fragment = document.createDocumentFragment();
+    for (let i = start; i < State.log.length; i++) {
+      const item = State.log[i];
+      const line = el('div', `log-line log-${item.type}`);
+      line.textContent = `[${item.ts}] ${item.msg}`;
+      fragment.appendChild(line);
+    }
+    div.replaceChildren(fragment);
+    div.scrollTop = div.scrollHeight;
+  });
 }
 
-// ── Kill Zone ticker ─────────────────────────────────────────────────────────
 function updateKillZone() {
   const kz = new KillZoneFilter();
   const zone = kz.currentZone();
-  const el$ = $('kill-zone');
+  const target = $('kill-zone');
+  if (!target) return;
   if (zone) {
-    el$.textContent = `🎯 Kill Zone: ${zone}`;
-    el$.className = 'kill-zone active';
+    target.textContent = `🎯 Kill Zone: ${zone}`;
+    target.className = 'kill-zone active';
   } else {
     const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-    el$.textContent = `⏸ 非Kill Zone  台北 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-    el$.className = 'kill-zone inactive';
+    target.textContent = `⏸ 非Kill Zone 台北 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    target.className = 'kill-zone inactive';
   }
 }
 setInterval(updateKillZone, 30000);
 
-// ── Run Button ───────────────────────────────────────────────────────────────
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function mapLimit(items, limit, worker, onProgress) {
+  const output = new Array(items.length);
+  let next = 0;
+  let done = 0;
+
+  async function runner() {
+    while (true) {
+      const index = next++;
+      if (index >= items.length) return;
+      try {
+        output[index] = await worker(items[index], index);
+      } catch (error) {
+        output[index] = null;
+      }
+      done++;
+      onProgress?.(done, items.length, output[index]);
+      await sleep(80);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, runner));
+  return output;
+}
+
+async function runAnalysis() {
+  log('🚀 MJ Sniper v9.0 啟動 · 手機高速模式', 'header');
+  updateKillZone();
+
+  const workers = Math.max(2, Math.min(4, Number(CONFIG.MAX_WORKERS) || 4));
+  const topCount = Math.max(1, Math.min(4, Number(CONFIG.R1_TOP_N_ETF) || 4));
+  const holdingCount = Math.max(1, Math.min(8, Number(CONFIG.R1_TOP_HOLDINGS) || 8));
+
+  log('════ 第一輪：ETF 賽道篩選 ════', 'section');
+  const screener = new ETFPreScreener(CONFIG);
+  const etfTasks = Object.entries(ETF_UNIVERSE).flatMap(([market, tickers]) =>
+    tickers.map(ticker => ({ ticker, market }))
+  );
+
+  const r1Rows = await mapLimit(
+    etfTasks,
+    workers,
+    ({ ticker, market }) => screener.screen(ticker, market),
+    (done, total, row) => {
+      $('stats-bar').textContent = `第一輪：${done}/${total}`;
+      if (row?.price != null) log(`→ ${row.ticker}: ${row.pass ? '✅' : '❌'} score=${row.score}`);
+    }
+  );
+
+  const passed = r1Rows.filter(row => row?.price != null && row.pass).sort((a, b) => b.score - a.score);
+  const failed = r1Rows.filter(row => row?.price != null && !row.pass).sort((a, b) => b.score - a.score);
+  State.r1Results = { passed, failed };
+  renderR1Table(passed, failed);
+  log(`✅ 通過: ${passed.length} 檔 ❌ 淘汰: ${failed.length} 檔`, 'success');
+
+  const topEtfs = selectTopEtfsByMarket(passed, CONFIG.R1_MIN_KEEP_BY_MARKET, topCount);
+  State.topEtfs = topEtfs;
+  log(`📋 第二輪 ETF: ${topEtfs.join(', ') || '無'}`, 'info');
+
+  const stockTasks = [];
+  const seen = new Set();
+  for (const etf of topEtfs) {
+    for (const stk of (ETF_HOLDINGS[etf] || []).slice(0, holdingCount)) {
+      if (!seen.has(stk)) {
+        seen.add(stk);
+        stockTasks.push({ stk, etf });
+      }
+    }
+  }
+
+  log(`📊 第二輪並行分析 ${stockTasks.length} 檔成分股`, 'section');
+  const scorer = new ICTSMCScorer(CONFIG);
+  const results = (await mapLimit(
+    stockTasks,
+    workers,
+    ({ stk, etf }) => scorer.analyze(stk, etf),
+    (done, total, row) => {
+      $('stats-bar').textContent = `第二輪：${done}/${total}`;
+      if (row?.success) log(`${row.action}: ${row.ticker} score=${row.score}`);
+    }
+  )).filter(Boolean);
+
+  const actionOrder = { BUY: 0, WATCH: 1, SELL: 2, SKIP: 3 };
+  results.sort((a, b) => (actionOrder[a.action] - actionOrder[b.action]) || (b.score - a.score));
+  State.r2Results = results;
+  renderR2Table(results);
+  document.dispatchEvent(new CustomEvent('r2-complete', { detail: results }));
+
+  const buy = results.filter(row => row.action === 'BUY').length;
+  const watch = results.filter(row => row.action === 'WATCH').length;
+  const skip = results.filter(row => row.action === 'SKIP').length;
+  $('r1-count').textContent = `${passed.length}/${passed.length + failed.length} 通過`;
+  $('stats-bar').textContent = `✅ 完成 | BUY: ${buy} | WATCH: ${watch} | SKIP: ${skip}`;
+  $('btn-export').disabled = false;
+  log(`🎯 分析完成 · BUY: ${buy} · WATCH: ${watch}`, 'success');
+}
+
+function renderR1Table(passed, failed) {
+  const tbody = $('r1-table-body');
+  const rows = [
+    ...passed.map(row => ({ ...row, _pass: true })),
+    ...failed.slice(0, 20).map(row => ({ ...row, _pass: false })),
+  ];
+  const fragment = document.createDocumentFragment();
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    tr.className = row._pass ? 'row-pass' : 'row-fail';
+    const change = row.change_5d >= 0 ? `+${row.change_5d}%` : `${row.change_5d}%`;
+    const structure = row.structure === 'BULLISH' ? 'BULL' : row.structure === 'BEARISH' ? 'BEAR' : row.structure;
+    tr.innerHTML = `<td>${row.ticker}</td><td>${row.market}</td><td>${row.price ?? '-'}</td><td>${change}</td><td>${row.score}</td><td>${row.liquidity_ok ? '✅' : '—'}</td><td>${row.trend_ok ? '✅' : '—'}</td><td>${row.flow_ok ? '✅' : '—'}</td><td>${row.vol_ratio ?? '-'}</td><td>${structure}</td><td>${row._pass ? '✅' : '—'}</td>`;
+    fragment.appendChild(tr);
+  }
+  tbody.replaceChildren(fragment);
+}
+
+function renderR2Table(results) {
+  const tbody = $('r2-table-body');
+  const fragment = document.createDocumentFragment();
+  const shown = results.filter(row => row.success).slice(0, 60);
+  for (const row of shown) {
+    const tr = document.createElement('tr');
+    tr.className = `row-${String(row.action || 'skip').toLowerCase()}`;
+    const signals = [
+      row.stop_hunt?.bull_stop_hunt ? 'SH' : '',
+      row.fvg?.in_bullish_fvg ? 'FVG' : '',
+      row.ob?.in_bull_ob ? 'OB' : '',
+      row.ote?.in_ote ? 'OTE' : '',
+      row.mtf_bull ? 'MTF' : '',
+    ].filter(Boolean).join(' ');
+    tr.innerHTML = `<td>${row.ticker}</td><td>${row.source_etf || ''}</td><td>${row.price ?? '-'}</td><td>${row.change_5d ?? 0}%</td><td>${row.score}</td><td>${row.action_zh || row.action}</td><td>${row.grade || ''}</td><td>${row.structure || ''}</td><td>${row.rsi ?? '-'}</td><td>${row.vol_ratio ?? '-'}</td><td>${row.zone || '-'}</td><td>${signals || '—'}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${row.macro_bonus ?? 0}</td><td>${row.vix ?? '-'}</td><td>—</td><td>${row.stop_loss ?? '-'}</td>`;
+    fragment.appendChild(tr);
+  }
+  tbody.replaceChildren(fragment);
+  $('r2-count').textContent = `${shown.length} 檔`;
+}
+
 $('btn-run').addEventListener('click', async () => {
   if (State.running) return;
   State.running = true;
   $('btn-run').disabled = true;
   $('btn-run').textContent = '⚡ 分析中...';
-  $('log').innerHTML = '';
-  $('r1-table-body').innerHTML = '';
-  $('r2-table-body').innerHTML = '';
+  State.log = [];
+  $('log').replaceChildren();
+  $('r1-table-body').replaceChildren();
+  $('r2-table-body').replaceChildren();
   $('stats-bar').textContent = '';
-
   try {
     await runAnalysis();
+  } catch (error) {
+    log(`❌ ${error.message || error}`, 'warn');
   } finally {
     State.running = false;
     $('btn-run').disabled = false;
@@ -64,205 +213,17 @@ $('btn-run').addEventListener('click', async () => {
   }
 });
 
-async function runAnalysis() {
-  log('🚀 MJ Sniper v9.0 啟動 · ICT/SMC Elite System', 'header');
-  updateKillZone();
-
-  // ── Round 1: ETF Screener ────────────────────────────────────────────────
-  log('════ 第一輪: ETF賽道篩選 ════', 'section');
-  const screener = new ETFPreScreener(CONFIG);
-  const { passed, failed } = await screener.scanAll(ETF_UNIVERSE, msg => log(msg));
-  State.r1Results = { passed, failed };
-
-  log(`✅ 通過: ${passed.length} 檔  ❌ 淘汰: ${failed.length} 檔`, 'success');
-  renderR1Table(passed, failed);
-
-  // ── Select top ETFs by market ────────────────────────────────────────────
-  const topEtfs = selectTopEtfsByMarket(passed, CONFIG.R1_MIN_KEEP_BY_MARKET, CONFIG.R1_TOP_N_ETF);
-  State.topEtfs = topEtfs;
-  log(`📋 第二輪選用ETF: ${topEtfs.join(', ')}`, 'info');
-
-  // ── Round 2: ICT/SMC Scorer ─────────────────────────────────────────────
-  log('════ 第二輪: ICT/SMC 精密評分 ════', 'section');
-  const scorer  = new ICTSMCScorer(CONFIG);
-  const allStks = [];
-  const seen    = new Set();
-  for (const etf of topEtfs) {
-    for (const stk of (ETF_HOLDINGS[etf] || []).slice(0, CONFIG.R1_TOP_HOLDINGS)) {
-      if (!seen.has(stk)) { allStks.push({ stk, etf }); seen.add(stk); }
-    }
-  }
-
-  log(`📊 分析 ${allStks.length} 檔成分股...`, 'info');
-  const r2 = [];
-  let done = 0;
-  for (const { stk, etf } of allStks) {
-    const res = await scorer.analyze(stk, etf);
-    r2.push(res);
-    done++;
-    if (res.success) {
-      const icon = res.action === 'BUY' ? '🟢' : res.action === 'WATCH' ? '🟡' : res.action === 'SELL' ? '🔴' : '⚪';
-      log(`${icon} ${stk} (${etf}) score=${res.score} ${res.action_zh}`, res.action === 'BUY' ? 'buy' : res.action === 'SELL' ? 'sell' : 'info');
-    } else {
-      log(`⚠ ${stk}: ${res.error || '無資料'}`, 'warn');
-    }
-    $('stats-bar').textContent = `進度: ${done}/${allStks.length}`;
-    await sleep(CONFIG.REQUEST_DELAY);
-  }
-
-  r2.sort((a, b) => {
-    const order = { BUY: 0, WATCH: 1, SELL: 2, SKIP: 3 };
-    if (order[a.action] !== order[b.action]) return order[a.action] - order[b.action];
-    return b.score - a.score;
-  });
-  State.r2Results = r2;
-  renderR2Table(r2);
-  document.dispatchEvent(new CustomEvent('r2-complete', { detail: r2 }));
-  document.getElementById('r1-count').textContent =
-    State.r1Results.passed.length + '/' +
-    (State.r1Results.passed.length + State.r1Results.failed.length) + ' 通過';
-
-  const buyCount = r2.filter(r => r.action === 'BUY').length;
-  log(`🎯 分析完成 · BUY: ${buyCount} · WATCH: ${r2.filter(r=>r.action==='WATCH').length}`, 'success');
-  $('stats-bar').textContent = `✅ 完成 | 買進訊號: ${buyCount} | WATCH: ${r2.filter(r=>r.action==='WATCH').length} | 略過: ${r2.filter(r=>r.action==='SKIP').length}`;
-  $('btn-export').disabled = false;
-}
-
-// ── Render R1 Table ──────────────────────────────────────────────────────────
-function renderR1Table(passed, failed) {
-  const tbody = $('r1-table-body');
-  tbody.innerHTML = '';
-  const all = [
-    ...passed.map(r => ({ ...r, _pass: true })),
-    ...failed.slice(0, 20).map(r => ({ ...r, _pass: false })),
-  ];
-  for (const r of all) {
-    const tr = document.createElement('tr');
-    tr.className = r._pass ? 'row-pass' : 'row-fail';
-    const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`;
-    const struct = r.structure === 'BULLISH' ? '<span class="green">BULL</span>' : r.structure === 'BEARISH' ? '<span class="red">BEAR</span>' : r.structure;
-    tr.innerHTML = `
-      <td class="mono bold">${r.ticker}</td>
-      <td>${r.market}</td>
-      <td class="mono">${r.price ?? '-'}</td>
-      <td class="mono">${change}</td>
-      <td class="score-cell">${r.score}</td>
-      <td>${r.liquidity_ok ? '✅' : '❌'}</td>
-      <td>${r.trend_ok ? '✅' : '❌'}</td>
-      <td>${r.flow_ok ? '✅' : '❌'}</td>
-      <td>${r.vol_ratio}</td>
-      <td>${struct}</td>
-      <td class="pass-cell">${r._pass ? '<span class="green">通過</span>' : '<span class="dim">淘汰</span>'}</td>
-    `;
-    tbody.appendChild(tr);
-  }
-}
-
-// ── Render R2 Table ──────────────────────────────────────────────────────────
-function renderR2Table(results) {
-  const tbody = $('r2-table-body');
-  tbody.innerHTML = '';
-  const success = results.filter(r => r.success);
-  const top = success.slice(0, 60);
-  $('r2-count').textContent = success.length + ' 檔';
-
-  for (const r of top) {
-    const tr = document.createElement('tr');
-    tr.className = `row-${r.action.toLowerCase()}`;
-
-    const actionClass = r.action === 'BUY' ? 'green bold' : r.action === 'WATCH' ? 'amber' : r.action === 'SELL' ? 'red' : 'dim';
-    const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`;
-    const struct = r.structure === 'BULLISH' ? '<span class="green">●</span>' : r.structure === 'BEARISH' ? '<span class="red">●</span>' : '<span class="dim">●</span>';
-    const signals = [
-      r.stop_hunt?.bull_stop_hunt ? '<span class="green" title="Stop Hunt">SH</span>' : '',
-      r.fvg?.in_bullish_fvg ? '<span class="green" title="Fair Value Gap">FVG</span>' : '',
-      r.ob?.in_bull_ob ? '<span class="green" title="Order Block">OB</span>' : '',
-      r.ote?.in_ote ? '<span class="amber" title="Optimal Trade Entry">OTE</span>' : '',
-      r.mtf_bull ? '<span class="cyan" title="Multi-Timeframe Confluence">MTF</span>' : '',
-    ].filter(Boolean).join(' ');
-
-    tr.innerHTML = `
-      <td class="mono bold">${r.ticker}</td>
-      <td class="dim">${r.source_etf}</td>
-      <td class="mono">${r.price ?? '-'}</td>
-      <td>${change}</td>
-      <td class="score-cell ${r.score >= 80 ? 'score-high' : r.score >= 60 ? 'score-mid' : ''}">${r.score}</td>
-      <td class="${actionClass}">${r.action_zh}</td>
-      <td class="dim">${r.grade}</td>
-      <td>${struct} ${r.structure}</td>
-      <td class="mono dim">${r.rsi ?? '-'}</td>
-      <td class="mono dim">${r.vol_ratio ?? '-'}</td>
-      <td class="zone-${(r.zone||'').toLowerCase()}">${r.zone ?? '-'}</td>
-      <td class="signals-cell">${signals || '<span class="dim">─</span>'}</td>
-      <td class="mono dim">${r.stop_loss ?? '-'}</td>
-    `;
-    tbody.appendChild(tr);
-  }
-}
-
-// ── Export CSV ───────────────────────────────────────────────────────────────
-$('btn-export').addEventListener('click', () => {
-  if (!State.r2Results.length) return;
-  exportCSV(State.r2Results.filter(r => r.success), 'MJ_Sniper_v9_R2');
-  exportCSV([...State.r1Results.passed, ...State.r1Results.failed], 'MJ_Sniper_v9_R1');
-});
-
-function exportCSV(rows, filename) {
+$('btn-export')?.addEventListener('click', () => {
+  const rows = State.r2Results.filter(row => row.success);
   if (!rows.length) return;
-  const keys = Object.keys(rows[0]).filter(k => typeof rows[0][k] !== 'object');
-  const header = keys.join(',');
-  const body = rows.map(r => keys.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + header + '\n' + body], { type: 'text/csv;charset=utf-8' });
+  const headers = ['ticker', 'source_etf', 'price', 'change_5d', 'score', 'action', 'grade', 'rsi', 'vol_ratio', 'zone', 'stop_loss'];
+  const csv = [headers.join(','), ...rows.map(row => headers.map(key => JSON.stringify(row[key] ?? '')).join(','))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${filename}_${new Date().toISOString().slice(0,16).replace(/[T:]/g,'-')}.csv`;
+  a.download = `MJ_Sniper_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
-}
-
-// ── Table sorting ─────────────────────────────────────────────────────────────
-function makeSortable(tableId) {
-  const table = document.getElementById(tableId);
-  if (!table) return;
-  table.querySelectorAll('th[data-sort]').forEach(th => {
-    let asc = true;
-    th.style.cursor = 'pointer';
-    th.addEventListener('click', () => {
-      const col = parseInt(th.dataset.sort);
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      rows.sort((a, b) => {
-        const va = a.cells[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
-        const vb = b.cells[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
-        const na = parseFloat(va), nb = parseFloat(vb);
-        if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
-        return asc ? va.localeCompare(vb) : vb.localeCompare(va);
-      });
-      rows.forEach(r => tbody.appendChild(r));
-      asc = !asc;
-    });
-  });
-}
-
-// ── Tab switching ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    $(btn.dataset.tab).classList.add('active');
-  });
+  URL.revokeObjectURL(a.href);
 });
 
-// ── Config panel toggle ───────────────────────────────────────────────────────
-$('btn-config').addEventListener('click', () => {
-  const panel = $('config-panel');
-  panel.classList.toggle('open');
-  $('btn-config').textContent = panel.classList.contains('open') ? '⚙ 收合設定' : '⚙ 顯示設定';
-});
-
-// ── Init ─────────────────────────────────────────────────────────────────────
 updateKillZone();
-makeSortable('r1-table');
-makeSortable('r2-table');
-log('MJ Sniper v9.0 · ICT/SMC Elite Trading System 就緒', 'header');
-log('按下 ▶ 執行掃描 開始分析', 'info');

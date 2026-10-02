@@ -358,6 +358,9 @@ const CONFIG = {
   MAX_WORKERS:   5,
   REQUEST_DELAY: 250,
   CHANGE_LOOKBACK: 5,
+  R2_MTF_PRESCREEN:  true,  // only fetch 1h/15m when the stock could still reach WATCH/BUY (action result unchanged)
+  R2_MAX_STOCKS:     0,     // 0 = no cap on round-2 stocks; e.g. 80 to limit work
+  ALLOW_FALLBACK_PASS: true // true = ETF with no price data is force-passed (labelled 備援); false = rejected
 };
 
 const ETF_UNIVERSE = {
@@ -374,21 +377,21 @@ const ETF_HOLDINGS = {
   XLK:  ['NVDA','AAPL','MSFT','AVGO','MU','AMD','ORCL','AMAT','QCOM','INTC','NOW','ANET','KLAC','LRCX','TXN'],
   IGV:  ['MSFT','ORCL','PLTR','CRM','PANW','ADBE','CRWD','SNOW','NOW','TEAM','WDAY','ZS','DDOG','OKTA','HUBS'],
   SOXX: ['NVDA','AVGO','AMD','QCOM','TXN','INTC','AMAT','LRCX','KLAC','MU','ON','MCHP','ADI','SWKS','MPWR'],
-  SMH:  ['NVDA','TSMC','ASML','AVGO','AMD','QCOM','TXN','AMAT','LRCX','KLAC','MU','INTC','ON','ADI','MCHP'],
-  HACK: ['CRWD','PANW','CSCO','FTNT','ZS','OKTA','VRNS','TENB','QLYS','SAIL','FFIV','S','CYBR','NTCT','FEYE'],
+  SMH:  ['NVDA','TSM','ASML','AVGO','AMD','QCOM','TXN','AMAT','LRCX','KLAC','MU','INTC','ON','ADI','MCHP'],
+  HACK: ['CRWD','PANW','CSCO','FTNT','ZS','OKTA','VRNS','TENB','QLYS','SAIL','FFIV','S','CYBR','NTCT'],
   SKYY: ['MSFT','AMZN','GOOGL','ORCL','CRM','IBM','NOW','WDAY','DDOG','SNOW','ZS','OKTA','HUBS','BOX','TWLO'],
   ARKG: ['RXRX','IRTC','PACB','TWST','VCYT','NVTA','FATE','CDNA','EXAS','TNDM','NTLA','BEAM','CRSP','EDIT','ARCT'],
-  XLE:  ['XOM','CVX','COP','SLB','WMB','KMI','PSX','VLO','MPC','OXY','EOG','FANG','DVN','PXD','HES'],
-  XOP:  ['MPC','OXY','FANG','VLO','PSX','DVN','EOG','PXD','COP','CXO','APA','MRO','CTRA','XEC','SM'],
+  XLE:  ['XOM','CVX','COP','SLB','WMB','KMI','PSX','VLO','MPC','OXY','EOG','FANG','DVN'],
+  XOP:  ['MPC','OXY','FANG','VLO','PSX','DVN','EOG','COP','APA','CTRA','SM'],
   OIH:  ['SLB','HAL','BKR','NOV','FTI','PTEN','WHD','RES','PUMP','NR','NINE','OIS','KOS','HP','NGL'],
   XLF:  ['BRK-B','JPM','V','MA','BAC','WFC','GS','MS','BLK','SCHW','C','AXP','CB','MMC','AON'],
   KRE:  ['ZION','HBAN','RF','CFG','KEY','MTB','FITB','COLB','WAL','BOKF','WTFC','IBOC','CVBF','CMA','PNFP'],
   KBE:  ['JPM','BAC','WFC','C','USB','PNC','GS','MS','TFC','COF','FITB','KEY','RF','HBAN','ZION'],
   XLV:  ['UNH','LLY','JNJ','ABBV','MRK','TMO','ABT','AMGN','DHR','VRTX','ISRG','REGN','ZTS','ELV','BSX'],
-  IBB:  ['AMGN','VRTX','REGN','GILD','BIIB','MRNA','ALNY','SGEN','ILMN','BMRN','EXEL','JAZZ','NBIX','SRPT','RARE'],
+  IBB:  ['AMGN','VRTX','REGN','GILD','BIIB','MRNA','ALNY','ILMN','BMRN','EXEL','JAZZ','NBIX','SRPT','RARE'],
   XBI:  ['RCUS','KRYS','DNLI','ARWR','KROS','PCVX','IMVT','CYTK','RVMD','PTGX','INVA','ACAD','EXAS','FOLD','NKTR'],
   XLI:  ['GE','RTX','HON','UNP','CAT','DE','ETN','EMR','LMT','NOC','UPS','FDX','ITW','PH','CMI'],
-  ITA:  ['RTX','LMT','BA','NOC','GD','L3H','TDG','HEI','LDOS','SAIC','KTOS','DRS','CW','AXON','CACI'],
+  ITA:  ['RTX','LMT','BA','NOC','GD','LHX','TDG','HEI','LDOS','SAIC','KTOS','DRS','CW','AXON','CACI'],
   XLY:  ['AMZN','TSLA','HD','MCD','NKE','LOW','SBUX','BKNG','TJX','ROST','CMG','MAR','HLT','YUM','EBAY'],
   XLP:  ['PG','COST','KO','PEP','WMT','PM','MO','MDLZ','CL','KMB','SYY','KR','HSY','CPB','K'],
   XLB:  ['LIN','APD','ECL','SHW','FCX','NEM','NUE','DOW','DD','PPG','IFF','EMN','CF','MOS','ALB'],
@@ -415,137 +418,295 @@ const ETF_HOLDINGS = {
   '588000.SS': ['688981.SS','600845.SS','688041.SS','603501.SS','688036.SS','688012.SS','600703.SS','688008.SS','002607.SZ','688009.SS'],
   '159949.SZ': ['300750.SZ','300014.SZ','002594.SZ','002049.SZ','300274.SZ','300124.SZ','300316.SZ','002142.SZ','002460.SZ','300773.SZ'],
   '2800.HK':   ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
-  '3110.HK':   ['0700.HK','BABA','JD','BIDU','NTES','TME','BILI','VIPS','IQ','CTRP'],
+  '3110.HK':   ['0700.HK','BABA','JD','BIDU','NTES','TME','BILI','VIPS','IQ','TCOM'],
   '3033.HK':   ['0700.HK','0005.HK','0939.HK','1299.HK','0941.HK','0388.HK','2318.HK','1398.HK','3988.HK','0011.HK'],
 };
 
-// ==================== DataService ====================
+// ==================== DataService (v5: static-first + hedged proxy race + circuit breaker) ====================
 const DataService = (() => {
-  const _cache = {};
+  const CFG = {
+    TIMEOUT: 6000,                  // per request (ms)
+    HEDGE_MS: 500,                  // start next backup source after this delay
+    MAX_CONCURRENT: 4,              // max simultaneous proxy requests
+    MEM_TTL: 10 * 60 * 1000,        // in-memory cache
+    DAILY_TTL: 6 * 60 * 60 * 1000,  // localStorage cache for network-fetched daily bars
+    FAIL_TTL: 60 * 1000,            // don't retry a failed ticker for 60s
+    STATIC_BASE: './data/ohlcv/',   // written by GitHub Actions (scripts/fetch_ohlcv.py)
+    FUND_BASE: './data/fundamentals/',
+    STATIC_MAX_AGE_DAYS: 5,         // older static data -> try network first
+    CUSTOM_PROXY: '',               // e.g. 'https://your-worker.workers.dev/?url=' (tried first if set)
+    BREAKER_FAILS: 8,               // consecutive total failures before fast-fail mode
+    BREAKER_COOLDOWN: 45 * 1000,
+    LS_PREFIX: 'ds5:',
+  };
+
+  const HOSTS = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
   const PROXIES = [
-    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,
-    url => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
-    url => `https://proxy.cors.sh/${url}`,
-    url => url,
+    { name: 'corsproxy',  make: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}` },
+    { name: 'allorigins', make: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
+    { name: 'codetabs',   make: u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}` },
   ];
+  // Only ranges Yahoo's chart API accepts: 1d 5d 1mo 3mo 6mo 1y 2y 5y 10y ytd max
+  const NET_RANGE = { '1y': '1y', '6mo': '6mo', '3mo': '3mo', '2mo': '3mo', '60d': '3mo', '1mo': '1mo', '5d': '5d' };
+  const RANGE_DAYS = { '5d': 7, '1mo': 31, '2mo': 62, '60d': 62, '3mo': 93, '6mo': 186 };
+  const STATIC_PERIODS = new Set(['1y', '6mo', '3mo', '2mo', '60d', '1mo', '5d']);
 
-  const YF_CHART = (ticker, interval, range) =>
-    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${interval}&range=${range}&events=history&includePrePost=false`;
+  const mem = new Map();
+  const pending = new Map();
+  const failed = new Map();
+  let lastGood = null, consecutiveFails = 0, breakerUntil = 0, staticIdxP = null;
 
-  const PERIOD_MAP = { '1y': '1y', '60d': '60d', '5d': '5d', '3mo': '3mo' };
+  const chartPath = (ticker, interval, range) =>
+    `/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${interval}&range=${range}&events=history&includePrePost=false`;
+
+  // ---------- concurrency limiter ----------
+  let active = 0;
+  const queue = [];
+  function limit(fn) {
+    return new Promise((resolve, reject) => {
+      const run = () => {
+        active++;
+        fn().then(resolve, reject).finally(() => { active--; if (queue.length) queue.shift()(); });
+      };
+      active < CFG.MAX_CONCURRENT ? run() : queue.push(run);
+    });
+  }
+
+  // ---------- localStorage (never throws) ----------
+  const ls = {
+    get(k) { try { const s = localStorage.getItem(CFG.LS_PREFIX + k); return s ? JSON.parse(s) : null; } catch (_) { return null; } },
+    set(k, v) {
+      try { localStorage.setItem(CFG.LS_PREFIX + k, JSON.stringify(v)); }
+      catch (_) { ls.purge(); try { localStorage.setItem(CFG.LS_PREFIX + k, JSON.stringify(v)); } catch (__) {} }
+    },
+    purge() { try { Object.keys(localStorage).filter(k => k.startsWith(CFG.LS_PREFIX)).forEach(k => localStorage.removeItem(k)); } catch (_) {} },
+  };
+  const pack = rows => rows.map(r => [Math.round(r.date.getTime() / 1000), r.open, r.high, r.low, r.close, r.volume, r.adj]);
+  const unpack = arr => arr.map(a => ({ date: new Date(a[0] * 1000), open: a[1], high: a[2], low: a[3], close: a[4], volume: a[5], adj: a[6] }));
 
   function parseChart(data) {
     const result = data?.chart?.result?.[0];
-    if (!result?.timestamp) return null;
-    const ts = result.timestamp;
-    const q = result.indicators.quote[0];
-    const adj = result.indicators.adjclose?.[0]?.adjclose || q.close;
+    const quote = result?.indicators?.quote?.[0];
+    if (!result?.timestamp || !quote) return null;
+    const adj = result.indicators?.adjclose?.[0]?.adjclose || quote.close;
     const rows = [];
-    for (let i = 0; i < ts.length; i++) {
-      if (q.open[i] == null || q.close[i] == null) continue;
-      rows.push({
-        date: new Date(ts[i] * 1000),
-        open: q.open[i],
-        high: q.high[i],
-        low: q.low[i],
-        close: q.close[i],
-        volume: q.volume[i] || 0,
-        adj: adj[i] || q.close[i],
-      });
+    for (let i = 0; i < result.timestamp.length; i++) {
+      const open = quote.open?.[i], high = quote.high?.[i], low = quote.low?.[i], close = quote.close?.[i];
+      if (open == null || high == null || low == null || close == null) continue;
+      rows.push({ date: new Date(result.timestamp[i] * 1000), open, high, low, close, volume: quote.volume?.[i] || 0, adj: adj?.[i] || close });
     }
     return rows.length >= 5 ? rows : null;
   }
 
-  async function fetchWithProxy(url) {
-    for (let j = 0; j < PROXIES.length; j++) {
-      const makeProxy = PROXIES[j];
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 8000);
-        const res = await fetch(makeProxy(url), { signal: ctrl.signal, headers: { 'Accept': 'application/json' } });
-        clearTimeout(tid);
-        if (!res.ok) continue;
-        const text = await res.text();
-        if (!text || text.trim().startsWith('<')) continue;
-        return JSON.parse(text);
-      } catch (err) { /* try next */ }
+  // ---------- network: hedged race over proxies x hosts ----------
+  function attempt(url) {
+    const c = new AbortController();
+    const t = setTimeout(() => c.abort(), CFG.TIMEOUT);
+    const promise = fetch(url, { signal: c.signal })
+      .then(async r => {
+        const s = (await r.text()).trim();
+        if (s[0] === '{') {
+          let j = null;
+          try { j = JSON.parse(s); } catch (_) {}
+          // A Yahoo "not found" body is still a valid answer (service is reachable)
+          if (j && (j.chart || r.ok)) return j;
+        }
+        throw new Error(r.ok ? 'not json' : 'HTTP ' + r.status);
+      })
+      .finally(() => clearTimeout(t));
+    return { promise, abort: () => c.abort() };
+  }
+
+  function noteResult(ok) {
+    if (ok) { consecutiveFails = 0; return; }
+    if (++consecutiveFails >= CFG.BREAKER_FAILS) {
+      consecutiveFails = 0;
+      breakerUntil = Date.now() + CFG.BREAKER_COOLDOWN;
+      try { console.warn('[DataService] 代理連續失敗，暫停即時請求 ' + CFG.BREAKER_COOLDOWN / 1000 + 's'); } catch (_) {}
     }
+  }
+
+  function proxyList() {
+    const list = [];
+    if (CFG.CUSTOM_PROXY) list.push({ name: 'custom', make: u => CFG.CUSTOM_PROXY + encodeURIComponent(u) });
+    return list.concat(PROXIES);
+  }
+
+  function fetchTarget(targets) {
+    if (Date.now() < breakerUntil) return Promise.reject(new Error('breaker-open'));
+    const proxies = proxyList().sort((a, b) => (b.name === lastGood) - (a.name === lastGood));
+    const cands = [];
+    for (const p of proxies) for (const u of targets) cands.push({ p, url: p.make(u) });
+    return new Promise((resolve, reject) => {
+      let done = false, nFailed = 0;
+      const running = [], timers = [];
+      cands.forEach((c, i) => {
+        timers.push(setTimeout(() => {
+          if (done) return;
+          const a = attempt(c.url);
+          running.push(a);
+          a.promise.then(json => {
+            if (done) return;
+            done = true; lastGood = c.p.name;
+            timers.forEach(clearTimeout);
+            running.forEach(x => { if (x !== a) x.abort(); });
+            noteResult(true);
+            resolve(json);
+          }).catch(() => {
+            if (done) return;
+            if (++nFailed === cands.length) { done = true; noteResult(false); reject(new Error('all sources failed')); }
+          });
+        }, i * CFG.HEDGE_MS));
+      });
+    });
+  }
+
+  // ---------- static data (data/ohlcv/*.json from GitHub Actions) ----------
+  async function fetchLocal(url, ms, noCache) {
+    const c = new AbortController();
+    const t = setTimeout(() => c.abort(), ms || 5000);
+    try {
+      const r = await fetch(url, noCache ? { signal: c.signal, cache: 'no-cache' } : { signal: c.signal });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (_) { return null; } finally { clearTimeout(t); }
+  }
+  function loadStaticIndex() {
+    if (!CFG.STATIC_BASE) return Promise.resolve(null);
+    if (!staticIdxP) {
+      staticIdxP = (async () => {
+        const j = await fetchLocal(CFG.STATIC_BASE + 'index.json', 4000, true);
+        return j && Array.isArray(j.ok) ? { set: new Set(j.ok), updated: j.updated || '' } : null;
+      })();
+    }
+    return staticIdxP;
+  }
+  function sliceRange(rows, period) {
+    const d = RANGE_DAYS[period];
+    if (!d || !rows.length) return rows;
+    const cutoff = rows[rows.length - 1].date.getTime() - d * 864e5;
+    const out = rows.filter(r => r.date.getTime() >= cutoff);
+    return out.length >= 5 ? out : rows;
+  }
+  async function fromStatic(t, period) {
+    const idx = await loadStaticIndex();
+    if (!idx || !idx.set.has(t)) return null;
+    const j = await fetchLocal(`${CFG.STATIC_BASE}${encodeURIComponent(t)}.json?v=${encodeURIComponent(idx.updated)}`, 6000);
+    if (!j || !j.rows || j.rows.length < 5) return null;
+    const age = (Date.now() - Date.parse(j.updated || idx.updated)) / 864e5;
+    return { rows: sliceRange(unpack(j.rows), period), stale: !(age <= CFG.STATIC_MAX_AGE_DAYS) };
+  }
+  async function getStaticJson(ticker, kind) {
+    const base = kind === 'fundamentals' ? CFG.FUND_BASE : CFG.STATIC_BASE;
+    if (!base) return null;
+    const key = `static|${kind}|${ticker}`;
+    if (mem.has(key)) return mem.get(key).rows;
+    const j = await fetchLocal(`${base}${encodeURIComponent(ticker)}.json`, 5000);
+    mem.set(key, { rows: j, time: Date.now() });
+    return j;
+  }
+  async function staticStatus() {
+    const idx = await loadStaticIndex();
+    return idx ? { ok: true, count: idx.set.size, updated: idx.updated } : { ok: false };
+  }
+
+  // ---------- public: OHLCV ----------
+  async function loadOne(t, period, interval) {
+    const daily1d = interval === '1d';
+    let staleRows = null;
+    if (daily1d && STATIC_PERIODS.has(period)) {
+      const s = await fromStatic(t, period);
+      if (s && !s.stale) return s.rows;
+      if (s) staleRows = s.rows;
+    }
+    const lsKey = `${t}|${period}|${interval}`;
+    const saved = daily1d ? ls.get(lsKey) : null;
+    if (saved && Date.now() - saved.t < CFG.DAILY_TTL) return unpack(saved.r);
+    try {
+      const json = await limit(() => fetchTarget(HOSTS.map(h => `https://${h}${chartPath(t, interval, NET_RANGE[period] || period)}`)));
+      const rows = parseChart(json);
+      if (rows) { if (daily1d) ls.set(lsKey, { t: Date.now(), r: pack(rows) }); return rows; }
+    } catch (_) {}
+    const fb = staleRows || (saved ? unpack(saved.r) : null);
+    if (fb) { fb.stale = true; return fb; }
     return null;
   }
 
   async function getOHLCV(ticker, period = '1y', interval = '1d') {
     const key = `${ticker}|${period}|${interval}`;
-    if (_cache[key]) return _cache[key];
-    const candidateTickers = [ticker];
-    if (/^\d{4}$/.test(ticker)) candidateTickers.push(ticker + '.TW', ticker + '.TWO');
-    for (let j = 0; j < candidateTickers.length; j++) {
-      const t = candidateTickers[j];
-      const url = YF_CHART(t, interval, PERIOD_MAP[period] || period);
-      const data = await fetchWithProxy(url);
-      if (!data) continue;
-      const rows = parseChart(data);
-      if (!rows) continue;
-      _cache[key] = rows;
-      _cache[`${t}|${period}|${interval}`] = rows;
-      return rows;
-    }
-    return null;
+    const now = Date.now();
+    const hit = mem.get(key);
+    if (hit && now - hit.time < CFG.MEM_TTL) return hit.rows;
+    const fl = failed.get(key);
+    if (fl && now - fl < CFG.FAIL_TTL) return null;
+    if (pending.has(key)) return pending.get(key);
+    const req = (async () => {
+      const cands = [ticker];
+      if (/^\d{4}$/.test(ticker)) cands.push(ticker + '.TW', ticker + '.TWO');
+      for (const t of cands) {
+        const rows = await loadOne(t, period, interval);
+        if (rows) { mem.set(key, { rows, time: Date.now() }); return rows; }
+      }
+      failed.set(key, Date.now());
+      return null;
+    })().finally(() => pending.delete(key));
+    pending.set(key, req);
+    return req;
   }
 
+  // Local table only. (Yahoo's quoteSummary now needs a crumb, so the old live scrape always failed
+  // after trying every proxy and cost up to ~48s per ETF.)
+  async function getETFHoldings(ticker, maxN = 20) {
+    const key = `holdings|${ticker}|${maxN}`;
+    const hit = mem.get(key);
+    if (hit) return hit.rows;
+    let symbols = (ETF_HOLDINGS[ticker] || ETF_HOLDINGS[ticker.split('.')[0]] || []).slice(0, maxN);
+    if (!symbols.length) symbols = ['MSFT', 'NVDA', 'AAPL', 'AMZN', 'GOOGL', 'META', 'TSLA'].slice(0, maxN);
+    mem.set(key, { rows: symbols, time: Date.now() });
+    return symbols;
+  }
+
+  // Generic JSON fetch through the proxy race (used by Marco). Resolves null on failure.
+  function fetchWithProxy(url) { return limit(() => fetchTarget([url])).catch(() => null); }
+
+  async function mapLimit(items, n, fn) {
+    const out = new Array(items.length);
+    let i = 0;
+    const worker = async () => {
+      while (i < items.length) {
+        const idx = i++;
+        try { out[idx] = await fn(items[idx], idx); } catch (_) { out[idx] = null; }
+        await new Promise(r => setTimeout(r, 15)); // keep UI responsive
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(n, items.length) }, worker));
+    return out;
+  }
+
+  async function diagnose(ticker = 'AAPL') {
+    const target = `https://${HOSTS[0]}${chartPath(ticker, '1d', '1mo')}`;
+    return Promise.all(proxyList().map(async p => {
+      const t0 = performance.now();
+      try {
+        const ok = !!parseChart(await attempt(p.make(target)).promise);
+        return { proxy: p.name, ok, ms: Math.round(performance.now() - t0), info: ok ? 'OK' : 'JSON but no bars' };
+      } catch (e) {
+        return { proxy: p.name, ok: false, ms: Math.round(performance.now() - t0), info: e.name === 'AbortError' ? 'timeout' : e.message };
+      }
+    }));
+  }
+
+  // ---------- math helpers (unchanged) ----------
   function col(rows, field) { return rows.map(r => r[field]); }
   function rollingMean(arr, n) { return arr.map((_, i) => i < n - 1 ? NaN : arr.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n); }
   function ewmMean(arr, com) { const alpha = 1 / (com + 1); const out = new Array(arr.length).fill(NaN); let prev = NaN; for (let i = 0; i < arr.length; i++) { if (isNaN(arr[i])) continue; if (isNaN(prev)) { prev = arr[i]; out[i] = arr[i]; continue; } prev = alpha * arr[i] + (1 - alpha) * prev; out[i] = prev; } return out; }
 
-  async function getETFHoldings(ticker, maxN = 20) {
-    const cacheKey = `holdings:${ticker}`;
-    if (_cache[cacheKey]) return _cache[cacheKey];
-    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=topHoldings&corsDomain=finance.yahoo.com`;
-    let symbols = [];
-    for (let j = 0; j < PROXIES.length; j++) {
-      const makeProxy = PROXIES[j];
-      try {
-        const ctrl2 = new AbortController();
-        const tid2 = setTimeout(() => ctrl2.abort(), 8000);
-        const res = await fetch(makeProxy(url), { signal: ctrl2.signal, headers: { 'Accept': 'application/json' } });
-        clearTimeout(tid2);
-        if (!res.ok) continue;
-        const text2 = await res.text();
-        if (!text2 || text2.trim().startsWith('<')) continue;
-        const data = JSON.parse(text2);
-        const holdings = data?.quoteSummary?.result?.[0]?.topHoldings?.holdings || [];
-        symbols = holdings
-          .map(h => h.symbol)
-          .filter(s => s && s.length >= 1 && s.length <= 12)
-          .map(s => {
-            if (ticker.endsWith('.TW') || ticker.endsWith('.TWO')) {
-              if (!s.endsWith('.TW') && !s.endsWith('.TWO')) return s + '.TW';
-            }
-            if (/^\d{4}$/.test(s)) return s;
-            return s;
-          })
-          .slice(0, maxN);
-        if (symbols.length >= 3) break;
-      } catch (err) { /* try next */ }
-    }
-    if (symbols.length < 3) {
-      const fallback = ETF_HOLDINGS[ticker] || ETF_HOLDINGS[ticker.split('.')[0]] || [];
-      if (fallback.length) {
-        symbols = fallback.slice(0, maxN);
-      } else {
-        symbols = ['MSFT', 'NVDA', 'AAPL', 'AMZN', 'GOOGL', 'META', 'TSLA'].slice(0, maxN);
-      }
-      console.warn(`[DataService] getETFHoldings(${ticker}) 使用備援 (${symbols.length}檔)`);
-    } else {
-      console.info(`[DataService] getETFHoldings(${ticker}) 爬蟲成功：${symbols.slice(0,3).join(',')}...`);
-    }
-    _cache[cacheKey] = symbols;
-    return symbols;
+  function clearCache() {
+    mem.clear(); pending.clear(); failed.clear(); ls.purge();
+    consecutiveFails = 0; breakerUntil = 0; staticIdxP = null;
   }
 
-  function clearCache() { Object.keys(_cache).forEach(k => delete _cache[k]); }
-  return { getOHLCV, getETFHoldings, col, rollingMean, ewmMean, clearCache };
+  return { getOHLCV, getETFHoldings, fetchWithProxy, getStaticJson, staticStatus, mapLimit, diagnose, col, rollingMean, ewmMean, clearCache, CFG };
 })();
 
 // ==================== structure-engine.js ====================
@@ -575,8 +736,9 @@ class ETFPreScreener {
     const rows = await DataService.getOHLCV(ticker, '1y', '1d');
     if (!rows || rows.length < 65) {
       const fb = ETF_HOLDINGS[ticker] || ETF_HOLDINGS[ticker.split('.')[0]] || [];
-      if (fb.length >= 3) {
+      if (fb.length >= 3 && this.cfg.ALLOW_FALLBACK_PASS !== false) {
         r.pass = true;
+        r.fallback = true;
         r.score = CONFIG.R1_ETF_SCORE_PASS + 25;
         r.price = null;
         r.liquidity_ok = true;
@@ -634,28 +796,25 @@ class ETFPreScreener {
   }
   async scanAll(universe, onProgress) {
     const passed = [], failed = [];
-    const markets = Object.keys(universe);
-    for (let i = 0; i < markets.length; i++) {
-      const market = markets[i];
-      const tickers = universe[market];
-      if (onProgress) onProgress(`📡 掃描 ${market} ETF (${tickers.length} 檔)...`);
-      for (let j = 0; j < tickers.length; j++) {
-        const ticker = tickers[j];
-        const res = await this.screen(ticker, market);
-        if (res.pass) passed.push(res);
-        else if (res.price !== null) failed.push(res);
-        if (onProgress) onProgress(`  → ${ticker}: ${res.pass ? '✅' : '❌'} score=${res.score}`);
-        await sleep(this.cfg.REQUEST_DELAY);
-      }
+    const tasks = [], seenT = new Set();
+    for (const market of Object.keys(universe)) {
+      for (const ticker of universe[market]) { if (!seenT.has(ticker)) { seenT.add(ticker); tasks.push({ ticker, market }); } }
     }
-    if (onProgress) onProgress('📌 掃描台灣槓桿ETF...');
-    for (let i = 0; i < TW_LEVERAGE_ETF.length; i++) {
-      const t = TW_LEVERAGE_ETF[i];
-      if (!alreadyScanned(passed, failed, t)) {
-        const res = await this.screen(t, 'TW');
-        if (res.price !== null) (res.pass ? passed : failed).push(res);
-        await sleep(this.cfg.REQUEST_DELAY);
-      }
+    for (const t of TW_LEVERAGE_ETF) { if (!seenT.has(t)) { seenT.add(t); tasks.push({ ticker: t, market: 'TW' }); } }
+    if (onProgress) onProgress('📡 並行掃描 ' + tasks.length + ' 檔 ETF...');
+    let done = 0;
+    const workers = Math.min(4, this.cfg.MAX_WORKERS || 4);
+    const rows = await DataService.mapLimit(tasks, workers, async (task) => {
+      const res = await this.screen(task.ticker, task.market);
+      done++;
+      const sb = document.getElementById('stats-bar'); if (sb) sb.textContent = '第一輪：' + done + '/' + tasks.length;
+      if (onProgress) onProgress('  → ' + task.ticker + ': ' + (res.pass ? '✅' : '❌') + ' score=' + res.score + (res.fallback ? ' ⚠行情失敗·備援通過' : ''));
+      return res;
+    });
+    for (const res of rows) {
+      if (!res) continue;
+      if (res.pass) passed.push(res);
+      else if (res.price !== null) failed.push(res);
     }
     passed.sort((a, b) => b.score - a.score);
     failed.sort((a, b) => b.score - a.score);
@@ -698,6 +857,7 @@ class ICTSMCScorer {
     try {
       const rows1d = await DataService.getOHLCV(ticker, '1y', '1d');
       if (!rows1d || rows1d.length < 65) {
+        if (this.cfg.ALLOW_FALLBACK_PASS === false) { r.error = '日線資料不足'; return r; }
         try {
           const _s2 = ETF_SECTOR_MAP[sourceEtf] || 'Default';
           const _r2 = MacroCtx.computeBonus(ticker, _s2, null, null, null);
@@ -737,10 +897,7 @@ class ICTSMCScorer {
       const ote = this.engine.calcOte(rows1d);
       const pdz = this.engine.premiumDiscount(rows1d);
       r.bos = bos; r.fvg = fvg; r.ob = ob; r.stop_hunt = sh; r.ote = ote; r.pd_zone = pdz;
-      const rows1h = await DataService.getOHLCV(ticker, '60d', '1h');
-      const rows15m = await DataService.getOHLCV(ticker, '5d', '15m');
       r.mtf_bull = false;
-      if (rows1h && rows1h.length >= 25 && rows15m && rows15m.length >= 25) { r.mtf_bull = this._checkMtfConfluence(rows1d, rows1h, rows15m); }
       const kz = new KillZoneFilter();
       r.kill_zone = kz.currentZone();
       r.kill_zone_ok = kz.isInKillZone();
@@ -780,6 +937,10 @@ class ICTSMCScorer {
       if (ob.in_bull_ob) { score += this.cfg.R2_OB_SCORE; reasons.push('Bullish OB+25'); if (ob.vol_contraction) { score += 5; reasons.push('OB量縮+5'); } }
       if (ote.in_ote) { score += this.cfg.R2_OTE_SCORE; reasons.push('OTE區+20'); }
       if (bos.bos_bull) { score += this.cfg.R2_BOS_BULL_SCORE; reasons.push('BOS多頭+20'); } else if (bos.choch_bear || bos.bos_bear) { score += this.cfg.R2_CHOCH_BEAR_PENALTY; reasons.push('CHoCH/BOS空頭-30'); }
+      if (!this.cfg.R2_MTF_PRESCREEN || score + this.cfg.R2_MTF_BONUS + this.cfg.R2_DISCOUNT_BONUS >= this.cfg.HOLD_SCORE) {
+        const mtf = await Promise.all([DataService.getOHLCV(ticker, '60d', '1h'), DataService.getOHLCV(ticker, '5d', '15m')]);
+        if (mtf[0] && mtf[0].length >= 25 && mtf[1] && mtf[1].length >= 25) { r.mtf_bull = this._checkMtfConfluence(rows1d, mtf[0], mtf[1]); }
+      }
       if (r.mtf_bull) { score += this.cfg.R2_MTF_BONUS; reasons.push('MTF共振+15'); }
       const zone = pdz.zone || 'UNKNOWN';
       if (zone === 'DISCOUNT') { score += this.cfg.R2_DISCOUNT_BONUS; reasons.push('Discount+10'); } else if (zone === 'PREMIUM') { score += this.cfg.R2_PREMIUM_PENALTY; reasons.push('Premium-10'); }
@@ -979,11 +1140,11 @@ class MacroEngine {
   }
   async autoDetect() {
     if (this.state.detected && this.state.fetchedAt && Date.now() - this.state.fetchedAt < 300000) return;
-    try { const d = await DataService.getOHLCV('^TNX', '1d', '3mo'); if (d && d.length >= 40) { const c = d.map(x => x.close); const slope = c[c.length - 1] - c[Math.max(0, c.length - 60)]; this.state.rate_cycle = slope > 0.3 ? 'hike' : slope < -0.3 ? 'cut' : 'hold'; this.state.cpi_level = c[c.length - 1] > 4.5 ? 'high' : c[c.length - 1] > 3.5 ? 'normal' : 'low'; } } catch (e) { }
-    try { const d = await DataService.getOHLCV('GC=F', '1d', '2mo'); if (d && d.length >= 20) { const c = d.map(x => x.close), ma = c.slice(-20).reduce((a, b) => a + b, 0) / 20; this.state.geopolit_risk = c[c.length - 1] > ma * 1.05 ? 'high' : c[c.length - 1] < ma * 0.97 ? 'low' : 'medium'; } } catch (e) { }
-    try { const d = await DataService.getOHLCV('NVDA', '1d', '2mo'); if (d && d.length >= 20) { const c = d.map(x => x.close), ma = c.slice(-20).reduce((a, b) => a + b, 0) / 20; this.state.ai_trend = c[c.length - 1] > ma * 1.10 ? 'strong' : c[c.length - 1] < ma * 0.90 ? 'weak' : 'moderate'; } } catch (e) { }
+    try { const d = await DataService.getOHLCV('^TNX', '3mo', '1d'); if (d && d.length >= 40) { const c = d.map(x => x.close); const slope = c[c.length - 1] - c[Math.max(0, c.length - 60)]; this.state.rate_cycle = slope > 0.3 ? 'hike' : slope < -0.3 ? 'cut' : 'hold'; this.state.cpi_level = c[c.length - 1] > 4.5 ? 'high' : c[c.length - 1] > 3.5 ? 'normal' : 'low'; } } catch (e) { }
+    try { const d = await DataService.getOHLCV('GC=F', '3mo', '1d'); if (d && d.length >= 20) { const c = d.map(x => x.close), ma = c.slice(-20).reduce((a, b) => a + b, 0) / 20; this.state.geopolit_risk = c[c.length - 1] > ma * 1.05 ? 'high' : c[c.length - 1] < ma * 0.97 ? 'low' : 'medium'; } } catch (e) { }
+    try { const d = await DataService.getOHLCV('NVDA', '3mo', '1d'); if (d && d.length >= 20) { const c = d.map(x => x.close), ma = c.slice(-20).reduce((a, b) => a + b, 0) / 20; this.state.ai_trend = c[c.length - 1] > ma * 1.10 ? 'strong' : c[c.length - 1] < ma * 0.90 ? 'weak' : 'moderate'; } } catch (e) { }
     for (const [sym, key] of [['^VIX', 'vix'], ['^GSPC', 'spx'], ['^IXIC', 'ndx'], ['^DJI', 'dji']]) {
-      try { const d = await DataService.getOHLCV(sym, '1d', '2mo'); if (!d || d.length < 20) continue; const c = d.map(x => x.close); if (key === 'vix') { this.state.vix = +c[c.length - 1].toFixed(2); this.state.vix_signal = this.state.vix > 30 ? 'fear' : this.state.vix > 20 ? 'caution' : this.state.vix < 15 ? 'greed' : 'neutral'; } else { const ma5 = c.slice(-5).reduce((a, b) => a + b, 0) / 5, ma20 = c.slice(-20).reduce((a, b) => a + b, 0) / 20, cur = c[c.length - 1]; this.state[key + '_trend'] = cur > ma5 && ma5 > ma20 ? 'bullish' : cur < ma5 && ma5 < ma20 ? 'bearish' : 'neutral'; } } catch (e) { }
+      try { const d = await DataService.getOHLCV(sym, '3mo', '1d'); if (!d || d.length < 20) continue; const c = d.map(x => x.close); if (key === 'vix') { this.state.vix = +c[c.length - 1].toFixed(2); this.state.vix_signal = this.state.vix > 30 ? 'fear' : this.state.vix > 20 ? 'caution' : this.state.vix < 15 ? 'greed' : 'neutral'; } else { const ma5 = c.slice(-5).reduce((a, b) => a + b, 0) / 5, ma20 = c.slice(-20).reduce((a, b) => a + b, 0) / 20, cur = c[c.length - 1]; this.state[key + '_trend'] = cur > ma5 && ma5 > ma20 ? 'bullish' : cur < ma5 && ma5 < ma20 ? 'bearish' : 'neutral'; } } catch (e) { }
     }
     const tm = { bullish: 1, neutral: 0, bearish: -1 };
     const avg = (tm[this.state.spx_trend] + tm[this.state.ndx_trend] + tm[this.state.dji_trend]) / 3;
@@ -1067,6 +1228,7 @@ function setStyle(style) { MacroCtx.investorStyle = style; ['value', 'growth', '
 
 // ==================== app.js ====================
 const State = { running: false, r1Results: { passed: [], failed: [] }, r2Results: [], topEtfs: [], log: [] };
+window.State = State;
 const $ = id => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e; };
 function log(msg, type = 'info') { State.log.push({ msg, type, ts: new Date().toLocaleTimeString() }); const div = $('log'); const line = el('div', `log-line log-${type}`); line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`; div.appendChild(line); div.scrollTop = div.scrollHeight; }
@@ -1082,14 +1244,15 @@ async function runAnalysis() {
   State.r1Results = { passed, failed };
   log(`✅ 通過: ${passed.length} 檔  ❌ 淘汰: ${failed.length} 檔`, 'success');
   log('🌍 宏觀環境偵測（^TNX / GC=F / NVDA / ^VIX）...', 'info');
-  MacroCtx.autoDetect().then(() => { const s = MacroCtx.state; log(`🌍 宏觀快照 Fed=${s.rate_cycle} | CPI=${s.cpi_level} | VIX=${s.vix.toFixed(1)} | 大盤=${s.market_bias}`, 'success'); }).catch(() => log('⚠️ 宏觀偵測部分失敗（使用預設值）', 'warn'));
+  const macroP = MacroCtx.autoDetect().then(() => { const s = MacroCtx.state; log(`🌍 宏觀快照 Fed=${s.rate_cycle} | CPI=${s.cpi_level} | VIX=${s.vix.toFixed(1)} | 大盤=${s.market_bias}`, 'success'); }).catch(() => log('⚠️ 宏觀偵測部分失敗（使用預設值）', 'warn'));
   renderR1Table(passed, failed);
   const topEtfs = selectTopEtfsByMarket(passed, CONFIG.R1_MIN_KEEP_BY_MARKET, CONFIG.R1_TOP_N_ETF);
   State.topEtfs = topEtfs;
   log(`📋 第二輪選用ETF: ${topEtfs.join(', ')}`, 'info');
   log('════ 第二輪: ICT/SMC 精準評分 ════', 'section');
+  await macroP;
   const scorer = new ICTSMCScorer(CONFIG);
-  log('📡 爬蟲取得成分股清單...', 'section');
+  log('📡 成分股清單（本地表）...', 'section');
   const allStks = [], seen = {};
   for (let i = 0; i < topEtfs.length; i++) {
     const etf = topEtfs[i];
@@ -1098,18 +1261,18 @@ async function runAnalysis() {
     const source = holdings.length >= 3 ? '🌐爬蟲' : '📋備援';
     log(`  → ${etf}: ${source} ${holdings.length} 檔 [${holdings.slice(0, 5).join(',')}...]`, 'info');
     for (let j = 0; j < holdings.length; j++) { const stk = holdings[j]; if (!seen[stk]) { allStks.push({ stk, etf }); seen[stk] = true; } }
-    await sleep(CONFIG.REQUEST_DELAY);
   }
-  log(`📊 分析 ${allStks.length} 檔成分股...`, 'info');
-  const r2 = []; let done = 0;
-  for (let i = 0; i < allStks.length; i++) {
-    const item = allStks[i];
+  if (CONFIG.R2_MAX_STOCKS > 0 && allStks.length > CONFIG.R2_MAX_STOCKS) { log('✂ 成分股上限 R2_MAX_STOCKS=' + CONFIG.R2_MAX_STOCKS + '（原 ' + allStks.length + ' 檔）', 'warn'); allStks.length = CONFIG.R2_MAX_STOCKS; }
+  log(`📊 並行分析 ${allStks.length} 檔成分股...`, 'info');
+  let done = 0;
+  const r2raw = await DataService.mapLimit(allStks, Math.min(4, CONFIG.MAX_WORKERS || 4), async (item) => {
     const res = await scorer.analyze(item.stk, item.etf);
-    r2.push(res); done++;
-    if (res.success) { const icon = res.action === 'BUY' ? '●' : res.action === 'WATCH' ? '◇' : res.action === 'SELL' ? '▼' : '─'; log(`${icon} ${item.stk} (${item.etf}) score=${res.score} ${res.action_zh}`, res.action === 'BUY' ? 'buy' : res.action === 'SELL' ? 'sell' : 'info'); } else { log(`⚠ ${item.stk}: ${res.error || '無資料'}`, 'warn'); }
-    $('stats-bar').textContent = `進度: ${done}/${allStks.length}`;
-    await sleep(CONFIG.REQUEST_DELAY);
-  }
+    done++;
+    if (res.success) { const icon = res.action === 'BUY' ? '●' : res.action === 'WATCH' ? '◇' : res.action === 'SELL' ? '▼' : '─'; log(`${icon} ${item.stk} (${item.etf}) score=${res.score} ${res.action_zh}${res.grade === '行情備援' ? ' ⚠行情備援' : ''}`, res.action === 'BUY' ? 'buy' : res.action === 'SELL' ? 'sell' : 'info'); } else { log(`⚠ ${item.stk}: ${res.error || '無資料'}`, 'warn'); }
+    $('stats-bar').textContent = `第二輪: ${done}/${allStks.length}`;
+    return res;
+  });
+  const r2 = r2raw.filter(Boolean);
   r2.sort((a, b) => { const order = { BUY: 0, WATCH: 1, SELL: 2, SKIP: 3 }; if (order[a.action] !== order[b.action]) return order[a.action] - order[b.action]; return b.score - a.score; });
   State.r2Results = r2; renderR2Table(r2);
   if (window.CustomEvent) document.dispatchEvent(new CustomEvent('r2-complete', { detail: r2 }));
@@ -1121,7 +1284,7 @@ async function runAnalysis() {
   $('stats-bar').textContent = `✅ 完成 | 買進信號: ${buyCount} | WATCH: ${watchCount} | 略過: ${skipCount}`;
   $('btn-export').disabled = false;
 }
-function renderR1Table(passed, failed) { const tbody = $('r1-table-body'); tbody.innerHTML = ''; const all = []; for (let i = 0; i < passed.length; i++) { const copy = Object.assign({}, passed[i]); copy._pass = true; all.push(copy); } for (let i = 0; i < Math.min(failed.length, 20); i++) { const copy = Object.assign({}, failed[i]); copy._pass = false; all.push(copy); } for (let i = 0; i < all.length; i++) { const r = all[i]; const tr = document.createElement('tr'); tr.className = r._pass ? 'row-pass' : 'row-fail'; const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`; const struct = r.structure === 'BULLISH' ? '<span class="green">BULL</span>' : r.structure === 'BEARISH' ? '<span class="red">BEAR</span>' : r.structure; tr.innerHTML = `<td class="mono bold">${r.ticker}</td><td>${r.market}</td><td class="mono">${r.price !== null ? r.price : '-'}</td><td class="mono">${change}</td><td class="score-cell">${r.score}</td><td>${r.liquidity_ok ? '✅' : '❌'}</td><td>${r.trend_ok ? '✅' : '❌'}</td><td>${r.flow_ok ? '✅' : '❌'}</td><td>${r.vol_ratio}</td><td>${struct}</td><td class="pass-cell">${r._pass ? '<span class="green">通過</span>' : '<span class="dim">淘汰</span>'}</td>`; tbody.appendChild(tr); } }
+function renderR1Table(passed, failed) { const tbody = $('r1-table-body'); tbody.innerHTML = ''; const all = []; for (let i = 0; i < passed.length; i++) { const copy = Object.assign({}, passed[i]); copy._pass = true; all.push(copy); } for (let i = 0; i < Math.min(failed.length, 20); i++) { const copy = Object.assign({}, failed[i]); copy._pass = false; all.push(copy); } for (let i = 0; i < all.length; i++) { const r = all[i]; const tr = document.createElement('tr'); tr.className = r._pass ? 'row-pass' : 'row-fail'; const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`; const struct = r.structure === 'BULLISH' ? '<span class="green">BULL</span>' : r.structure === 'BEARISH' ? '<span class="red">BEAR</span>' : r.structure; tr.innerHTML = `<td class="mono bold">${r.ticker}</td><td>${r.market}</td><td class="mono">${r.price !== null ? r.price : '-'}</td><td class="mono">${change}</td><td class="score-cell">${r.score}</td><td>${r.liquidity_ok ? '✅' : '❌'}</td><td>${r.trend_ok ? '✅' : '❌'}</td><td>${r.flow_ok ? '✅' : '❌'}</td><td>${r.vol_ratio}</td><td>${struct}</td><td class="pass-cell">${r.fallback ? '<span class="amber" title="行情取得失敗，備援通過（未驗證）">備援</span>' : (r._pass ? '<span class="green">通過</span>' : '<span class="dim">淘汰</span>')}</td>`; tbody.appendChild(tr); } }
 function renderR2Table(results) { const tbody = $('r2-table-body'); tbody.innerHTML = ''; const success = results.filter(r => r.success); const top = success.slice(0, 60); $('r2-count').textContent = success.length + ' 檔'; for (let i = 0; i < top.length; i++) { const r = top[i]; const tr = document.createElement('tr'); tr.className = `row-${r.action.toLowerCase()}`; const actionClass = r.action === 'BUY' ? 'green bold' : r.action === 'WATCH' ? 'amber' : r.action === 'SELL' ? 'red' : 'dim'; const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`; const struct = r.structure === 'BULLISH' ? '<span class="green">●</span>' : r.structure === 'BEARISH' ? '<span class="red">●</span>' : '<span class="dim">●</span>'; const sigArray = []; if (r.stop_hunt && r.stop_hunt.bull_stop_hunt) sigArray.push('<span class="green" title="Stop Hunt">SH</span>'); if (r.fvg && r.fvg.in_bullish_fvg) sigArray.push('<span class="green" title="Fair Value Gap">FVG</span>'); if (r.ob && r.ob.in_bull_ob) sigArray.push('<span class="green" title="Order Block">OB</span>'); if (r.ote && r.ote.in_ote) sigArray.push('<span class="amber" title="Optimal Trade Entry">OTE</span>'); if (r.mtf_bull) sigArray.push('<span class="cyan" title="Multi-Timeframe Confluence">MTF</span>'); const signals = sigArray.join(' '); const oSignal = (r.ofi && r.ofi.signal) ? r.ofi.signal : '─'; const oC = oSignal.indexOf('Buy') > -1 ? 'green' : (oSignal.indexOf('Sell') > -1 ? 'red' : 'dim'); const oZScore = (r.ofi && r.ofi.zScore !== undefined && r.ofi.zScore !== null) ? r.ofi.zScore : '-'; const oAdvice = (r.ofi && r.ofi.advice) ? r.ofi.advice.replace(/"/g, "'") : ''; const oT = r.ofi ? `<span class="${oC}" title="${oAdvice}">${oSignal} Z:${oZScore}</span>` : '<span class="dim">─</span>'; const mSignal = (r.mlm && r.mlm.signal) ? r.mlm.signal : '─'; const mPercentile = (r.mlm && r.mlm.percentile !== undefined) ? r.mlm.percentile : '─'; const mAdvice = (r.mlm && r.mlm.advice) ? r.mlm.advice.replace(/"/g, "'") : ''; const mC = (mSignal === 'Strong Uptrend' || mSignal === 'Uptrend') ? 'green' : (mSignal === 'Downtrend' ? 'red' : 'dim'); const mT = r.mlm ? `<span class="${mC}" title="${mAdvice}">${mSignal.replace(' ', '')}<small> ${mPercentile}%</small></span>` : '<span class="dim">─</span>'; const vRegime = (r.vr && r.vr.regime) ? r.vr.regime : '─'; const vAdvice = (r.vr && r.vr.advice) ? r.vr.advice.replace(/"/g, "'") : ''; const vC = vRegime === 'High Vol' ? 'amber' : (vRegime === 'Low Vol' ? 'cyan' : 'dim'); const vT = r.vr ? `<span class="${vC}" title="${vAdvice}">${vRegime}</span>` : '<span class="dim">─</span>'; const cScore = (r.cp && r.cp.score) ? r.cp.score : 0; const cPatterns = (r.cp && r.cp.patterns && r.cp.patterns.length > 0) ? r.cp.patterns[0].slice(0, 8) : '─'; const cAdvice = (r.cp && r.cp.advice) ? r.cp.advice.replace(/"/g, "'") : ''; const cC = cScore > 0 ? 'green' : (cScore < 0 ? 'red' : 'dim'); const cT = (r.cp && r.cp.patterns && r.cp.patterns.length > 0) ? `<span class="${cC}" title="${cAdvice}">${cPatterns}</span>` : '<span class="dim">─</span>'; tr.innerHTML = `<td class="mono bold">${r.ticker}</td><td class="dim">${r.source_etf}</td><td class="mono">${r.price !== null ? r.price : '-'}</td><td>${change}</td><td class="score-cell ${r.score >= 80 ? 'score-high' : r.score >= 60 ? 'score-mid' : ''}">${r.score}</td><td class="${actionClass}">${r.action_zh}</td><td class="dim">${r.grade}</td><td>${struct} ${r.structure}</td><td class="mono dim">${r.rsi !== null ? r.rsi : '-'}</td><td class="mono dim">${r.vol_ratio !== null ? r.vol_ratio : '-'}</td><td class="zone-${(r.zone || '').toLowerCase()}">${r.zone !== null ? r.zone : '-'}</td><td class="signals-cell">${signals || '<span class="dim">─</span>'}</td><td>${oT}</td><td>${mT}</td><td>${vT}</td><td>${cT}</td><td class="${(r.macro_bonus || 0) > 0 ? 'mb-pos' : (r.macro_bonus || 0) < 0 ? 'mb-neg' : 'mb-neu'}" title="${r.macro_detail || ''}">${r.macro_bonus !== undefined ? (r.macro_bonus > 0 ? '+' : '') + r.macro_bonus : '─'}</td><td class="${(r.vix || 20) > 25 ? 'vix-h' : (r.vix || 20) < 15 ? 'vix-l' : 'vix-m'}">${r.vix !== undefined ? r.vix.toFixed(1) : '─'}</td><td class="${(r.market_bias || 0) > 0.3 ? 'green' : (r.market_bias || 0) < -0.3 ? 'red' : 'dim'}">${r.market_bias !== undefined ? (r.market_bias > 0 ? '↑' : '↓') + r.market_bias : '─'}</td><td class="mono dim">${r.atr_stop !== undefined ? r.atr_stop : (r.stop_loss !== null ? r.stop_loss : '-')}</td>`; tbody.appendChild(tr); } }
 $('btn-export').addEventListener('click', () => { if (!State.r2Results.length) return; const successRows = []; for (let i = 0; i < State.r2Results.length; i++) { if (State.r2Results[i].success) successRows.push(State.r2Results[i]); } exportCSV(successRows, 'MJ_Sniper_v9_R2'); exportCSV(State.r1Results.passed.concat(State.r1Results.failed), 'MJ_Sniper_v9_R1'); });
 function exportCSV(rows, filename) { if (!rows || !rows.length) return; const keys = Object.keys(rows[0]).filter(k => typeof rows[0][k] !== 'object'); const header = keys.join(','); const bodyArr = []; for (let i = 0; i < rows.length; i++) { const r = rows[i]; const rowVals = []; for (let j = 0; j < keys.length; j++) { const k = keys[j]; let val = r[k]; if (val === undefined || val === null) val = ''; rowVals.push('"' + String(val).replace(/"/g, '""') + '"'); } bodyArr.push(rowVals.join(',')); } const body = bodyArr.join('\n'); const blob = new Blob(['\uFEFF' + header + '\n' + body], { type: 'text/csv;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); const d = new Date(); const pad = n => n < 10 ? '0' + n : n; const ts = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + pad(d.getHours()) + '-' + pad(d.getMinutes()); a.download = `${filename}_${ts}.csv`; a.click(); }
@@ -1264,6 +1427,21 @@ setTimeout(function() {
   function marcoNum(v, d){ d = d || 1; return (v === null || v === undefined || Number.isNaN(Number(v))) ? "-" : Number(v).toFixed(d); }
   window.getFinancialSnapshot = async function(ticker){
     var out = { ticker: ticker, ok: false, source: '', totalScore: null, capexRatio: null, pe: null, roe: null, debtRatio: null, summary: '無法取得基本面資料' };
+    try {
+      var st = await DataService.getStaticJson(ticker, 'fundamentals');
+      if (st && st.ok) {
+        var pe0 = st.pe, roe0 = st.roe, debt0 = st.debtRatio, cx0 = st.capexRatio, sc0 = 0;
+        if (pe0 != null && pe0 > 0 && pe0 < 20) sc0 += 20; else if (pe0 != null && pe0 < 35) sc0 += 10;
+        if (roe0 != null && roe0 >= 0.15) sc0 += 20; else if (roe0 != null && roe0 >= 0.08) sc0 += 10;
+        if (debt0 != null && debt0 < 80) sc0 += 15; else if (debt0 != null && debt0 < 150) sc0 += 5;
+        if (cx0 != null) { if (cx0 < 25) sc0 += 10; else if (cx0 < 50) sc0 += 5; else if (cx0 > 100) sc0 -= 10; }
+        out.ok = true; out.source = 'Static fundamentals ' + String(st.updated || '').slice(0, 10);
+        out.totalScore = sc0; out.capexRatio = cx0 == null ? null : cx0; out.pe = pe0 == null ? null : pe0;
+        out.roe = roe0 == null ? null : roe0 * 100; out.debtRatio = debt0 == null ? null : debt0;
+        out.summary = 'PE=' + marcoNum(pe0, 1) + ' | ROE=' + marcoNum(out.roe, 1) + '% | CapEx=' + marcoNum(cx0, 1) + '% | Debt=' + marcoNum(debt0, 1) + ' | Score=' + marcoNum(sc0, 0);
+        return out;
+      }
+    } catch (e) {}
     var urls = [
       'https://query1.finance.yahoo.com/v10/finance/quoteSummary/' + encodeURIComponent(ticker) + '?modules=financialData,defaultKeyStatistics,cashflowStatementHistory&corsDomain=finance.yahoo.com',
       'https://query2.finance.yahoo.com/v10/finance/quoteSummary/' + encodeURIComponent(ticker) + '?modules=financialData,defaultKeyStatistics,cashflowStatementHistory&corsDomain=finance.yahoo.com'
@@ -1303,6 +1481,8 @@ setTimeout(function() {
     try{ var nvda = await DataService.getOHLCV('NVDA', '1y', '1d'); lines.push((nvda && nvda.length ? '✅' : '❌') + ' DataService.getOHLCV(NVDA)'); }catch(e){ lines.push('❌ DataService.getOHLCV(NVDA)'); }
     try{ var qqq = await DataService.getETFHoldings('QQQ', 5); lines.push((qqq && qqq.length ? '✅' : '❌') + ' DataService.getETFHoldings(QQQ)'); }catch(e){ lines.push('❌ DataService.getETFHoldings(QQQ)'); }
     try{ var fin = await window.getFinancialSnapshot('AAPL'); lines.push((fin && fin.ok ? '✅' : '❌') + ' getFinancialSnapshot(AAPL)'); }catch(e){ lines.push('❌ getFinancialSnapshot(AAPL)'); }
+    try{ var ss = await DataService.staticStatus(); lines.push(ss.ok ? '✅ 靜態資料 data/ohlcv：' + ss.count + ' 檔（更新 ' + String(ss.updated || '').slice(0, 10) + '）' : '❌ 靜態資料 data/ohlcv 不存在（改走即時代理，較慢）'); }catch(e){ lines.push('❌ 靜態資料檢查失敗'); }
+    try{ var dg = await DataService.diagnose('AAPL'); dg.forEach(function(d){ lines.push((d.ok ? '✅' : '❌') + ' 代理 ' + d.proxy + ' ' + d.ms + 'ms · ' + d.info); }); }catch(e){}
     window._lastDiagResult = lines.slice();
     if (typeof log === 'function') lines.forEach(function(x){ log(x, x.startsWith('✅') ? 'success' : x.startsWith('❌') ? 'warn' : 'info'); });
     return lines;

@@ -360,7 +360,7 @@ const CONFIG = {
   CHANGE_LOOKBACK: 5,
   R2_MTF_PRESCREEN:  true,  // only fetch 1h/15m when the stock could still reach WATCH/BUY (action result unchanged)
   R2_MAX_STOCKS:     0,     // 0 = no cap on round-2 stocks; e.g. 80 to limit work
-  ALLOW_FALLBACK_PASS: true // true = ETF with no price data is force-passed (labelled 備援); false = rejected
+  ALLOW_FALLBACK_PASS: false // false = no price data -> excluded (retried, never fabricated); true = old behaviour (fake WATCH/pass labelled 備援)
 };
 
 const ETF_UNIVERSE = {
@@ -425,18 +425,29 @@ const ETF_HOLDINGS = {
 // ==================== DataService (v5: static-first + hedged proxy race + circuit breaker) ====================
 const DataService = (() => {
   const CFG = {
-    TIMEOUT: 6000,                  // per request (ms)
-    HEDGE_MS: 500,                  // start next backup source after this delay
-    MAX_CONCURRENT: 4,              // max simultaneous proxy requests
+    TIMEOUT: 7000,                  // per request (ms)
+    HEDGE_MS: 1500,                 // start the next source if the current one is still pending after this long
+    MAX_CONCURRENT: 3,              // max simultaneous proxy requests (free proxies rate-limit bursts)
+    START_GAP_MS: 150,              // minimum gap between request starts
     MEM_TTL: 10 * 60 * 1000,        // in-memory cache
     DAILY_TTL: 6 * 60 * 60 * 1000,  // localStorage cache for network-fetched daily bars
     FAIL_TTL: 60 * 1000,            // don't retry a failed ticker for 60s
     STATIC_BASE: './data/ohlcv/',   // written by GitHub Actions (scripts/fetch_ohlcv.py)
     FUND_BASE: './data/fundamentals/',
     STATIC_MAX_AGE_DAYS: 5,         // older static data -> try network first
-    CUSTOM_PROXY: '',               // e.g. 'https://your-worker.workers.dev/?url=' (tried first if set)
-    BREAKER_FAILS: 8,               // consecutive total failures before fast-fail mode
-    BREAKER_COOLDOWN: 45 * 1000,
+    // Own Cloudflare Worker proxy. Set once by opening the page with ?proxy=https://NAME.workers.dev
+    // (saved in localStorage; ?proxy=off clears it).
+    CUSTOM_PROXY: (function () {
+      try {
+        var q = new URLSearchParams(location.search).get('proxy');
+        if (q === 'off') { localStorage.removeItem('mj_proxy'); return ''; }
+        if (q) { var v = q.indexOf('?url=') > -1 ? q : q.replace(/\/+$/, '') + '/?url='; localStorage.setItem('mj_proxy', v); return v; }
+        return localStorage.getItem('mj_proxy') || '';
+      } catch (e) { return ''; }
+    })(),
+    BREAKER_FAILS: 12,              // consecutive total failures (daily bars) before fast-fail mode
+    BREAKER_COOLDOWN: 15 * 1000,
+    INTRADAY_BUDGET_MS: 45 * 1000,  // 1h/15m (MTF bonus only): stop fetching them this long after a scan starts
     LS_PREFIX: 'ds5:',
   };
 
@@ -455,6 +466,7 @@ const DataService = (() => {
   const pending = new Map();
   const failed = new Map();
   let lastGood = null, consecutiveFails = 0, breakerUntil = 0, staticIdxP = null;
+  let intraStart = 0, intraFails = 0, intraOffUntil = 0; // 1h/15m only add a small MTF bonus: switch them off when proxies keep failing
 
   const chartPath = (ticker, interval, range) =>
     `/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${interval}&range=${range}&events=history&includePrePost=false`;
@@ -526,38 +538,57 @@ const DataService = (() => {
     }
   }
 
-  function proxyList() {
-    const list = [];
-    if (CFG.CUSTOM_PROXY) list.push({ name: 'custom', make: u => CFG.CUSTOM_PROXY + encodeURIComponent(u) });
-    return list.concat(PROXIES);
+  // proxy health: demote proxies that keep failing (e.g. corsproxy 401 on github.io)
+  const pstat = {};
+  const pScore = n => { const s = pstat[n]; return s ? s.ok - s.fail * 0.5 : 0; };
+  function pNote(n, ok) { const s = pstat[n] || (pstat[n] = { ok: 0, fail: 0 }); ok ? s.ok++ : s.fail++; }
+
+  function proxyOrder() {
+    const custom = CFG.CUSTOM_PROXY ? [{ name: 'custom', make: u => CFG.CUSTOM_PROXY + encodeURIComponent(u) }] : [];
+    const rest = PROXIES.slice().sort((a, b) => ((b.name === lastGood) - (a.name === lastGood)) || (pScore(b.name) - pScore(a.name)));
+    return custom.concat(rest);
+  }
+  const proxyList = () => proxyOrder();
+
+  let nextSlot = 0;
+  async function paced() {
+    const now = Date.now(), at = Math.max(now, nextSlot);
+    nextSlot = at + CFG.START_GAP_MS;
+    if (at > now) await new Promise(r => setTimeout(r, at - now));
   }
 
-  function fetchTarget(targets) {
+  // Try sources in order of health. The next source starts when the current one FAILS, or if it is still
+  // pending after HEDGE_MS (so a slow source never blocks, but a healthy one is not double-loaded).
+  function fetchTarget(targets, critical) {
     if (Date.now() < breakerUntil) return Promise.reject(new Error('breaker-open'));
-    const proxies = proxyList().sort((a, b) => (b.name === lastGood) - (a.name === lastGood));
     const cands = [];
-    for (const p of proxies) for (const u of targets) cands.push({ p, url: p.make(u) });
+    for (const p of proxyOrder()) for (const u of targets) cands.push({ p, url: p.make(u) });
     return new Promise((resolve, reject) => {
-      let done = false, nFailed = 0;
-      const running = [], timers = [];
-      cands.forEach((c, i) => {
-        timers.push(setTimeout(() => {
+      let done = false, started = 0, nFailed = 0, advTimer = null;
+      const running = [];
+      const startNext = () => {
+        if (done || started >= cands.length) return;
+        clearTimeout(advTimer);
+        const c = cands[started++];
+        const a = attempt(c.url);
+        running.push(a);
+        a.promise.then(json => {
           if (done) return;
-          const a = attempt(c.url);
-          running.push(a);
-          a.promise.then(json => {
-            if (done) return;
-            done = true; lastGood = c.p.name;
-            timers.forEach(clearTimeout);
-            running.forEach(x => { if (x !== a) x.abort(); });
-            noteResult(true);
-            resolve(json);
-          }).catch(() => {
-            if (done) return;
-            if (++nFailed === cands.length) { done = true; noteResult(false); reject(new Error('all sources failed')); }
-          });
-        }, i * CFG.HEDGE_MS));
-      });
+          done = true; lastGood = c.p.name; pNote(c.p.name, true);
+          clearTimeout(advTimer);
+          running.forEach(x => { if (x !== a) x.abort(); });
+          if (critical) noteResult(true);
+          resolve(json);
+        }).catch(() => {
+          pNote(c.p.name, false);
+          if (done) return;
+          nFailed++;
+          if (nFailed >= cands.length) { done = true; clearTimeout(advTimer); if (critical) noteResult(false); reject(new Error('all sources failed')); }
+          else startNext();
+        });
+        advTimer = setTimeout(startNext, CFG.HEDGE_MS);
+      };
+      startNext();
     });
   }
 
@@ -619,14 +650,21 @@ const DataService = (() => {
       if (s && !s.stale) return s.rows;
       if (s) staleRows = s.rows;
     }
+    if (!daily1d) {
+      if (Date.now() < intraOffUntil) return null;
+      if (!intraStart) intraStart = Date.now();
+      if (Date.now() - intraStart > CFG.INTRADAY_BUDGET_MS) return null;
+    }
     const lsKey = `${t}|${period}|${interval}`;
     const saved = daily1d ? ls.get(lsKey) : null;
     if (saved && Date.now() - saved.t < CFG.DAILY_TTL) return unpack(saved.r);
     try {
-      const json = await limit(() => fetchTarget(HOSTS.map(h => `https://${h}${chartPath(t, interval, NET_RANGE[period] || period)}`)));
+      const json = await limit(async () => { await paced(); return fetchTarget(HOSTS.map(h => `https://${h}${chartPath(t, interval, NET_RANGE[period] || period)}`), daily1d); });
       const rows = parseChart(json);
-      if (rows) { if (daily1d) ls.set(lsKey, { t: Date.now(), r: pack(rows) }); return rows; }
-    } catch (_) {}
+      if (rows) { if (daily1d) ls.set(lsKey, { t: Date.now(), r: pack(rows) }); else intraFails = 0; return rows; }
+    } catch (_) {
+      if (!daily1d && ++intraFails >= 6) { intraFails = 0; intraOffUntil = Date.now() + 120000; try { console.warn('[DataService] 盤中資料連續失敗，暫停 120s（MTF 加分略過）'); } catch (__) {} }
+    }
     const fb = staleRows || (saved ? unpack(saved.r) : null);
     if (fb) { fb.stale = true; return fb; }
     return null;
@@ -667,7 +705,7 @@ const DataService = (() => {
   }
 
   // Generic JSON fetch through the proxy race (used by Marco). Resolves null on failure.
-  function fetchWithProxy(url) { return limit(() => fetchTarget([url])).catch(() => null); }
+  function fetchWithProxy(url) { return limit(async () => { await paced(); return fetchTarget([url], false); }).catch(() => null); }
 
   async function mapLimit(items, n, fn) {
     const out = new Array(items.length);
@@ -701,12 +739,14 @@ const DataService = (() => {
   function rollingMean(arr, n) { return arr.map((_, i) => i < n - 1 ? NaN : arr.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n); }
   function ewmMean(arr, com) { const alpha = 1 / (com + 1); const out = new Array(arr.length).fill(NaN); let prev = NaN; for (let i = 0; i < arr.length; i++) { if (isNaN(arr[i])) continue; if (isNaN(prev)) { prev = arr[i]; out[i] = arr[i]; continue; } prev = alpha * arr[i] + (1 - alpha) * prev; out[i] = prev; } return out; }
 
+  function beginRun() { intraStart = 0; intraFails = 0; intraOffUntil = 0; }
+  function resetFailures() { failed.clear(); consecutiveFails = 0; breakerUntil = 0; }
   function clearCache() {
     mem.clear(); pending.clear(); failed.clear(); ls.purge();
     consecutiveFails = 0; breakerUntil = 0; staticIdxP = null;
   }
 
-  return { getOHLCV, getETFHoldings, fetchWithProxy, getStaticJson, staticStatus, mapLimit, diagnose, col, rollingMean, ewmMean, clearCache, CFG };
+  return { getOHLCV, getETFHoldings, fetchWithProxy, getStaticJson, staticStatus, mapLimit, diagnose, col, rollingMean, ewmMean, clearCache, resetFailures, beginRun, CFG };
 })();
 
 // ==================== structure-engine.js ====================
@@ -811,14 +851,17 @@ class ETFPreScreener {
       if (onProgress) onProgress('  → ' + task.ticker + ': ' + (res.pass ? '✅' : '❌') + ' score=' + res.score + (res.fallback ? ' ⚠行情失敗·備援通過' : ''));
       return res;
     });
-    for (const res of rows) {
-      if (!res) continue;
+    const nodata = [];
+    for (let i = 0; i < rows.length; i++) {
+      const res = rows[i];
+      if (!res) { nodata.push(tasks[i]); continue; }
       if (res.pass) passed.push(res);
       else if (res.price !== null) failed.push(res);
+      else nodata.push(tasks[i]);
     }
     passed.sort((a, b) => b.score - a.score);
     failed.sort((a, b) => b.score - a.score);
-    return { passed, failed };
+    return { passed, failed, nodata };
   }
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -1236,11 +1279,32 @@ function updateKillZone() { const kz = new KillZoneFilter(); const zone = kz.cur
 setInterval(updateKillZone, 30000);
 $('btn-run').addEventListener('click', async () => { if (State.running) return; State.running = true; $('btn-run').disabled = true; $('btn-run').textContent = '⚡ 分析中...'; $('log').innerHTML = ''; $('r1-table-body').innerHTML = ''; $('r2-table-body').innerHTML = ''; $('stats-bar').textContent = ''; try { await runAnalysis(); } finally { State.running = false; $('btn-run').disabled = false; $('btn-run').textContent = '▶ 執行掃描'; } });
 async function runAnalysis() {
+  DataService.beginRun();
   log('🚀 MJ Sniper v9.0 啟動 · ICT/SMC Elite System', 'header'); updateKillZone();
   log('════ 第一輪: ETF賽道篩選 ════', 'section');
   const screener = new ETFPreScreener(CONFIG);
   const resR1 = await screener.scanAll(ETF_UNIVERSE, msg => log(msg));
   const passed = resR1.passed, failed = resR1.failed;
+  let nodata = resR1.nodata || [];
+  for (let pass = 1; pass <= 2 && nodata.length; pass++) {
+    log('⚠ ' + nodata.length + ' 檔 ETF 行情取得失敗，12 秒後低速重試（第 ' + pass + ' 次）', 'warn');
+    $('stats-bar').textContent = '重試失敗 ETF: ' + nodata.length + ' 檔...';
+    await new Promise(r => setTimeout(r, 12000));
+    DataService.resetFailures();
+    const redo = await DataService.mapLimit(nodata, 2, (t) => screener.screen(t.ticker, t.market));
+    const still = [];
+    for (let k = 0; k < nodata.length; k++) {
+      const res = redo[k];
+      if (!res) { still.push(nodata[k]); continue; }
+      if (res.pass) passed.push(res); else if (res.price !== null) failed.push(res); else still.push(nodata[k]);
+    }
+    log('↻ ETF 重試補回 ' + (nodata.length - still.length) + '/' + nodata.length + ' 檔', still.length < nodata.length ? 'success' : 'warn');
+    const gained = still.length < nodata.length;
+    nodata = still;
+    if (!gained) break;
+  }
+  passed.sort((a, b) => b.score - a.score); failed.sort((a, b) => b.score - a.score);
+  if (nodata.length) log('⚠ ' + nodata.length + ' 檔 ETF 仍無行情，已排除：' + nodata.map(x => x.ticker).slice(0, 12).join(','), 'warn');
   State.r1Results = { passed, failed };
   log(`✅ 通過: ${passed.length} 檔  ❌ 淘汰: ${failed.length} 檔`, 'success');
   log('🌍 宏觀環境偵測（^TNX / GC=F / NVDA / ^VIX）...', 'info');
@@ -1272,7 +1336,25 @@ async function runAnalysis() {
     $('stats-bar').textContent = `第二輪: ${done}/${allStks.length}`;
     return res;
   });
-  const r2 = r2raw.filter(Boolean);
+  let r2all = r2raw.slice();
+  for (let pass = 1; pass <= 2; pass++) {
+    const badIdx = [];
+    for (let i = 0; i < r2all.length; i++) { if (!r2all[i] || !r2all[i].success) badIdx.push(i); }
+    if (!badIdx.length) break;
+    log('⚠ ' + badIdx.length + ' 檔行情取得失敗，12 秒後低速重試（第 ' + pass + ' 次）', 'warn');
+    $('stats-bar').textContent = '重試失敗項目: ' + badIdx.length + ' 檔...';
+    await new Promise(r => setTimeout(r, 12000));
+    DataService.resetFailures();
+    const redo = await DataService.mapLimit(badIdx, 2, (i) => scorer.analyze(allStks[i].stk, allStks[i].etf));
+    let gained = 0;
+    for (let k = 0; k < badIdx.length; k++) { if (redo[k] && redo[k].success) { r2all[badIdx[k]] = redo[k]; gained++; } }
+    log('↻ 重試補回 ' + gained + '/' + badIdx.length + ' 檔', gained ? 'success' : 'warn');
+    if (!gained) break;
+  }
+  const r2 = r2all.filter(x => x && x.success);
+  const r2FailCount = r2all.length - r2.length;
+  if (r2FailCount) log('⚠ ' + r2FailCount + ' 檔仍無行情，已排除（不產生任何買賣信號）', 'warn');
+  if (!r2.length) log('❌ 全部行情取得失敗：請先產生靜態資料 data/ohlcv，或用 ?proxy=你的Worker網址 設定自有代理', 'warn');
   r2.sort((a, b) => { const order = { BUY: 0, WATCH: 1, SELL: 2, SKIP: 3 }; if (order[a.action] !== order[b.action]) return order[a.action] - order[b.action]; return b.score - a.score; });
   State.r2Results = r2; renderR2Table(r2);
   if (window.CustomEvent) document.dispatchEvent(new CustomEvent('r2-complete', { detail: r2 }));
@@ -1281,7 +1363,7 @@ async function runAnalysis() {
   log(`🎯 分析完成 · BUY: ${buyCount} · WATCH: ${watchCount}`, 'success');
   MacroCtx.renderMacroRankTable(r2); MacroCtx._renderMatrix();
   log('🌍 宏觀分析完成，切換【宏觀情境】分頁查看', 'info');
-  $('stats-bar').textContent = `✅ 完成 | 買進信號: ${buyCount} | WATCH: ${watchCount} | 略過: ${skipCount}`;
+  $('stats-bar').textContent = `✅ 完成 | 買進信號: ${buyCount} | WATCH: ${watchCount} | 略過: ${skipCount}${r2FailCount ? ' | ⚠無行情已排除: ' + r2FailCount : ''}`;
   $('btn-export').disabled = false;
 }
 function renderR1Table(passed, failed) { const tbody = $('r1-table-body'); tbody.innerHTML = ''; const all = []; for (let i = 0; i < passed.length; i++) { const copy = Object.assign({}, passed[i]); copy._pass = true; all.push(copy); } for (let i = 0; i < Math.min(failed.length, 20); i++) { const copy = Object.assign({}, failed[i]); copy._pass = false; all.push(copy); } for (let i = 0; i < all.length; i++) { const r = all[i]; const tr = document.createElement('tr'); tr.className = r._pass ? 'row-pass' : 'row-fail'; const change = r.change_5d >= 0 ? `<span class="green">+${r.change_5d}%</span>` : `<span class="red">${r.change_5d}%</span>`; const struct = r.structure === 'BULLISH' ? '<span class="green">BULL</span>' : r.structure === 'BEARISH' ? '<span class="red">BEAR</span>' : r.structure; tr.innerHTML = `<td class="mono bold">${r.ticker}</td><td>${r.market}</td><td class="mono">${r.price !== null ? r.price : '-'}</td><td class="mono">${change}</td><td class="score-cell">${r.score}</td><td>${r.liquidity_ok ? '✅' : '❌'}</td><td>${r.trend_ok ? '✅' : '❌'}</td><td>${r.flow_ok ? '✅' : '❌'}</td><td>${r.vol_ratio}</td><td>${struct}</td><td class="pass-cell">${r.fallback ? '<span class="amber" title="行情取得失敗，備援通過（未驗證）">備援</span>' : (r._pass ? '<span class="green">通過</span>' : '<span class="dim">淘汰</span>')}</td>`; tbody.appendChild(tr); } }
@@ -1483,6 +1565,7 @@ setTimeout(function() {
     try{ var fin = await window.getFinancialSnapshot('AAPL'); lines.push((fin && fin.ok ? '✅' : '❌') + ' getFinancialSnapshot(AAPL)'); }catch(e){ lines.push('❌ getFinancialSnapshot(AAPL)'); }
     try{ var ss = await DataService.staticStatus(); lines.push(ss.ok ? '✅ 靜態資料 data/ohlcv：' + ss.count + ' 檔（更新 ' + String(ss.updated || '').slice(0, 10) + '）' : '❌ 靜態資料 data/ohlcv 不存在（改走即時代理，較慢）'); }catch(e){ lines.push('❌ 靜態資料檢查失敗'); }
     try{ var dg = await DataService.diagnose('AAPL'); dg.forEach(function(d){ lines.push((d.ok ? '✅' : '❌') + ' 代理 ' + d.proxy + ' ' + d.ms + 'ms · ' + d.info); }); }catch(e){}
+    lines.push(DataService.CFG.CUSTOM_PROXY ? '✅ 自訂代理（Worker）已啟用' : 'ℹ 未設定自訂代理（網址後加 ?proxy=你的worker網址）');
     window._lastDiagResult = lines.slice();
     if (typeof log === 'function') lines.forEach(function(x){ log(x, x.startsWith('✅') ? 'success' : x.startsWith('❌') ? 'warn' : 'info'); });
     return lines;
